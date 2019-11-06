@@ -33,4 +33,19 @@
     <string name="all_time">时长：</string>
     <string name="description">说明：</string>
     <string name="speed">速度：</string>
+    <string name="edit_info">编辑信息</string>
+    <string name="user_name">用户名</string>
+    <string name="head_image">头像</string>
+    <string name="sign">签名</string>
+    <string name="nick_name">昵称</string>
+    <string name="sex">性别</string>
+    <string name="company">公司</string>
+    <string name="duty">职务</string>
+    <string name="contact_way">邮箱</string>
+    <string name="input_hint">请输入...</string>
+    <string name="old_password">原密码</string>
+    <string name="new_password">新密码</string>
+    <string name="confirm_new_password">确认密码</string>
+    <string name="edit_password">修改密码</string>
+
 </resources>

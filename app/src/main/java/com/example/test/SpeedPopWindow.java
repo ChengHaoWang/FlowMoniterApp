@@ -3,6 +3,7 @@ package com.example.test;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.drawable.ColorDrawable;
+import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
@@ -34,10 +35,13 @@ public class SpeedPopWindow extends PopupWindow {
 
     private void initPopWindow() {
         this.setContentView(view);
+        DisplayMetrics dm = context.getResources().getDisplayMetrics();
+        int windowheight = dm.heightPixels;
+        int windowwidth=dm.widthPixels;
         // 设置弹出窗体的宽
-        //this.setWidth(300);
+        this.setWidth((windowwidth/9)*4);
         // 设置弹出窗体的高
-        //this.setHeight(550);
+        this.setHeight((windowheight/5)*2);
         // 设置弹出窗体可点击()
         this.setFocusable(true);
         this.setOutsideTouchable(true);

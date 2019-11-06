@@ -59,12 +59,22 @@ public class ApkTool {
     private static CountDownLatch cdl ;//数值是计数器初始值
     private static ThreadPoolExecutor poolExecutor = new ThreadPoolExecutor(10, 15,1, TimeUnit.SECONDS, new LinkedBlockingDeque<Runnable>(128));
 
+    public static String timeStamp2Date(long time, String format) {
+        if (format == null || format.isEmpty()) {
+            format = "yyyy-MM-dd HH:mm:ss";
+        }
+        SimpleDateFormat sdf = new SimpleDateFormat(format);
+        return sdf.format(new Date(time));
+    }
+
     @RequiresApi(api = Build.VERSION_CODES.M)
     public static List<AppItem> scanLocalInstallAppInfoList(PackageManager packageManager1, Context context1, final long starttime) {
 
         packageManager=packageManager1;
         context=context1;
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String a=timeStamp2Date(starttime,null);
+        String b=timeStamp2Date(System.currentTimeMillis(),null);
         try {
             myAppInfos.clear();
             Calendar beginCal = Calendar.getInstance();
@@ -179,7 +189,7 @@ public class ApkTool {
                             }
                         }while (wifiFlowSummary.hasNextBucket());
                         long totalByte=mobileTotalByte+wifiTotalByte;
-                        //Log.e("应用名称", applicationName);
+                        Log.e("应用名称", applicationName);
                         //Log.e("wifi流量", String.valueOf(wifiTotalByte));
                         //获取运行时间
                         Long runLongTime= Long.valueOf(0);//应用的总运行时长
@@ -200,7 +210,7 @@ public class ApkTool {
                         packageInfo=packageInfos.get(index);
                         Drawable icon=packageInfo.applicationInfo.loadIcon(packageManager);
                         if (icon == null) {
-                            mappItem.setAppIcon(context.getResources().getDrawable(R.drawable.headimage));
+                            mappItem.setAppIcon(context.getResources().getDrawable(R.mipmap.ic_launcher));
                         }
                         //Log.e("图片", String.valueOf(icon));
                         mappItem.setAppIcon(icon);

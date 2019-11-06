@@ -33,12 +33,17 @@ public class AppAdapter extends ArrayAdapter {
         TextView appname=view.findViewById(R.id.app_name);
         TextView appflow=view.findViewById(R.id.app_flow);
         TextView apptime=view.findViewById(R.id.app_time);
-        if (appItem.getAppIcon()!=null){
-            appImage.setImageDrawable(appItem.getAppIcon());//为图片视图设置图片资源
+        if (appItem!=null){
+            if (appItem.getAppIcon()!=null){
+                appImage.setImageDrawable(appItem.getAppIcon());//为图片视图设置图片资源
+            }
+            if (appItem.getAppName()!=null){
+                appname.setText(appItem.getAppName());
+            }
+            appflow.setText(appItem.getTotalFlowString());
+            apptime.setText(appItem.getTotalTime());
         }
-        appname.setText(appItem.getAppName());
-        appflow.setText(appItem.getTotalFlowString());
-        apptime.setText(appItem.getTotalTime());
+
 
         return view;
     }

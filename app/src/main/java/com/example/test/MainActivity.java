@@ -15,6 +15,7 @@ import android.app.usage.UsageStats;
 import android.app.usage.UsageStatsManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Build;
@@ -42,6 +43,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int MY_PERMISSIONS_REQUEST_READ_CONTACTS = 3;
     public final static int REQUEST_ACTION_USAGE_ACCESS_SETTINGS = 1;
+    private SharedPreferences sp;
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
@@ -180,6 +182,9 @@ public class MainActivity extends AppCompatActivity {
         });
 
         //登录点击事件
+        sp = getSharedPreferences("userInfo", 0);
+        String name=sp.getString("USER_NAME", "");
+        String pass =sp.getString("PASSWORD", "");
         confirm.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -191,10 +196,16 @@ public class MainActivity extends AppCompatActivity {
 
                     //Intent intent=new Intent(MainActivity.this,MainInterface.class);
                     //startActivity(intent);
+                    SharedPreferences.Editor editor =sp.edit();
+                    editor.putString("USER_NAME", accout_text);
+                    editor.putString("PASSWORD", password_text);
+                    editor.commit();
                 }
+
                 //测试用，测完删
                 Intent intent=new Intent(MainActivity.this,BottomNavigation.class);
                 startActivity(intent);
+
             }
         });
         //找回密码事件

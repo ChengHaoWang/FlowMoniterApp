@@ -1,22 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<jp.co.recruit_lifestyle.android.widget.WaveSwipeRefreshLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
-
-    <TextView
-        android:id="@+id/text_home"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="10dp"
-        android:layout_marginTop="13dp"
-        android:textAlignment="center"
-        android:textSize="18dp"
-        android:textColor="@color/white"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+    android:id="@+id/refreshLayout"
+    android:layout_marginTop="?attr/actionBarSize">
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:id="@+id/line1">
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -26,13 +19,13 @@
         android:focusable="true"
         android:focusableInTouchMode="true"
         android:marqueeRepeatLimit="marquee_forever"
-        android:layout_marginTop="20dp"
         android:text="这个项目的作用就是让这个单行的很长很长的单独一行的TextView实现跑马灯的效果。。。。。。" />
+
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:fillViewport="true"
-        >
+        android:id="@+id/scrollView">
         <com.example.test.MyListView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -41,4 +34,7 @@
             android:divider="@null">
         </com.example.test.MyListView>
     </ScrollView>
+
 </LinearLayout>
+
+</jp.co.recruit_lifestyle.android.widget.WaveSwipeRefreshLayout>

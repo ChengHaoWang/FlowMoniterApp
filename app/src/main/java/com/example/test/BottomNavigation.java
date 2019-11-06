@@ -5,11 +5,13 @@ import android.animation.ObjectAnimator;
 import android.animation.PropertyValuesHolder;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.PersistableBundle;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -19,11 +21,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.CheckBox;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
@@ -65,24 +69,172 @@ import static com.example.test.ApkTool.REQUEST_READ_PHONE_STATE;
 
 public class BottomNavigation extends FragmentActivity{
     private static final String TAG = "MainActivity";
-    private CustomPopWindow mPopwindow;
+    public static CustomPopWindow homePopWindow;
+    public static SpeedPopWindow speedPopWindow;
     private String sdkNum=null;//sdk号码
     private String model=null; //手机型号
     private String release =null; //android系统版本号
     private String mac = null;//mac地址
     private Fragment currentFragment=new Fragment();
     private FragmentManager manager;
+    private ImageView menu;
 
     //为弹出窗口实现监听类
-    private View.OnClickListener itemsOnClick = new View.OnClickListener() {
+    private View.OnClickListener homeItemsOnClick = new View.OnClickListener() {
 
         public void onClick(View v) {
-            mPopwindow.dismiss();
+            homePopWindow.dismiss();
             switch (v.getId()) {
 
             }
         }
 
+    };
+    private View.OnClickListener speedItemsOnClick = new View.OnClickListener() {
+
+        public void onClick(View v) {
+            speedPopWindow.dismiss();
+            switch (v.getId()) {
+
+            }
+        }
+
+    };
+    private OnClickListener homeMenuOnClick=new OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            final CheckBox positiveOrderItem = homePopWindow.view.findViewById(R.id.positiveOrder);
+            final CheckBox reverseOrderItem = homePopWindow.view.findViewById(R.id.reverseOrder);
+            final CheckBox dayOrderItem = homePopWindow.view.findViewById(R.id.dayOrder);
+            final CheckBox weekOrderItem = homePopWindow.view.findViewById(R.id.weekOrder);
+            final CheckBox monthOrderItem=homePopWindow.view.findViewById(R.id.monothOrder);
+            positiveOrderItem.setChecked(false);
+            reverseOrderItem.setChecked(false);
+            dayOrderItem.setChecked(false);
+            weekOrderItem.setChecked(false);
+            monthOrderItem.setChecked(false);
+            //获取toolbar的高度
+            Toolbar toolbar=findViewById(R.id.toolbar);
+            int toolbarheight=toolbar.getHeight();
+            int menuheight=menu.getHeight();
+            int menuwidth=menu.getWidth();
+
+            homePopWindow.showAtLocation(view, Gravity.RIGHT|Gravity.TOP, menuwidth/2, toolbarheight+(menuheight*3/4));
+
+            //弹出菜单监听
+            positiveOrderItem.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    //positiveOrderItem.setChecked(!positiveOrderItem.isChecked());
+                    if (positiveOrderItem.isChecked()){
+                        reverseOrderItem.setClickable(false);
+                    }else {
+                        reverseOrderItem.setClickable(true);
+                    }
+                }
+            });
+            reverseOrderItem.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (reverseOrderItem.isChecked()){
+                        positiveOrderItem.setClickable(false);
+                    }else {
+                        positiveOrderItem.setClickable(true);
+                    }
+                }
+            });
+            dayOrderItem.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (dayOrderItem.isChecked()){
+                        weekOrderItem.setClickable(false);
+                        monthOrderItem.setClickable(false);
+                    }else {
+                        weekOrderItem.setClickable(true);
+                        monthOrderItem.setClickable(true);
+                    }
+                }
+            });
+            weekOrderItem.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (weekOrderItem.isChecked()){
+                        dayOrderItem.setClickable(false);
+                        monthOrderItem.setClickable(false);
+                    }else {
+                        dayOrderItem.setClickable(true);
+                        monthOrderItem.setClickable(true);
+                    }
+                }
+            });
+            monthOrderItem.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (monthOrderItem.isChecked()){
+                        dayOrderItem.setClickable(false);
+                        weekOrderItem.setClickable(false);
+                    }else {
+                        dayOrderItem.setClickable(true);
+                        weekOrderItem.setClickable(true);
+                    }
+                }
+            });
+        }
+    };
+    private OnClickListener speedMenuOnClick=new OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            final CheckBox positiveOrderItem = speedPopWindow.view.findViewById(R.id.positiveOrder);
+            final CheckBox reverseOrderItem = speedPopWindow.view.findViewById(R.id.reverseOrder);
+            final CheckBox nameOrderItem = speedPopWindow.view.findViewById(R.id.nameOrder);
+            positiveOrderItem.setChecked(false);
+            reverseOrderItem.setChecked(false);
+            nameOrderItem.setChecked(false);
+            //获取toolbar的高度
+            Toolbar toolbar=findViewById(R.id.toolbar);
+            int toolbarheight=toolbar.getHeight();
+            int menuheight=menu.getHeight();
+            int menuwidth=menu.getWidth();
+            speedPopWindow.showAtLocation(view, Gravity.RIGHT|Gravity.TOP, menuwidth/2, toolbarheight+(menuheight*3/4));
+            //弹出菜单监听
+            positiveOrderItem.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    //positiveOrderItem.setChecked(!positiveOrderItem.isChecked());
+                    if (positiveOrderItem.isChecked()){
+                        reverseOrderItem.setClickable(false);
+                        nameOrderItem.setClickable(false);
+                    }else {
+                        reverseOrderItem.setClickable(true);
+                        nameOrderItem.setClickable(true);
+                    }
+                }
+            });
+            reverseOrderItem.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (reverseOrderItem.isChecked()){
+                        positiveOrderItem.setClickable(false);
+                        nameOrderItem.setClickable(false);
+                    }else {
+                        positiveOrderItem.setClickable(true);
+                        nameOrderItem.setClickable(true);
+                    }
+                }
+            });
+            nameOrderItem.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (nameOrderItem.isChecked()){
+                        positiveOrderItem.setClickable(false);
+                        reverseOrderItem.setClickable(false);
+                    }else {
+                        positiveOrderItem.setClickable(true);
+                        reverseOrderItem.setClickable(true);
+                    }
+                }
+            });
+        }
     };
     private void showFragment(Fragment fragment) {
         /*
@@ -167,7 +319,9 @@ public class BottomNavigation extends FragmentActivity{
         //Toolbar mToolbar=findViewById(R.id.toolbar);
         //setSupportActionBar(mToolbar);//利用Toolbar代替ActionBar
         //getSupportActionBar().setDisplayShowTitleEnabled(false);
-
+        homePopWindow = new CustomPopWindow(BottomNavigation.this, homeItemsOnClick);
+        speedPopWindow = new SpeedPopWindow(BottomNavigation.this, speedItemsOnClick);
+        menu=findViewById(R.id.menu);
         Fragment homeFragment=new Fragment();
         final DashboardFragment dashboardFragment=new DashboardFragment();
         final NotificationsFragment notificationsFragment=new NotificationsFragment();
@@ -185,7 +339,7 @@ public class BottomNavigation extends FragmentActivity{
         }
         final Fragment finalHomeFragment = homeFragment;
         final TextView title=findViewById(R.id.title);
-        final ImageView menu=findViewById(R.id.menu);
+        menu.setOnClickListener(homeMenuOnClick);
         //导航栏点击监听事件
         navView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
             @Override
@@ -194,18 +348,20 @@ public class BottomNavigation extends FragmentActivity{
                 if (menuItem.getTitle().toString().equals(getResources().getString(R.string.title_home))){
                     title.setText(getResources().getString(R.string.title_home));
                     showFragment(finalHomeFragment);
-                    //menu.setOnClickListener(HomeFragment.menuOnclick);
+                    menu.setOnClickListener(homeMenuOnClick);
                     //Log.e("导航栏1", String.valueOf(id));
                 }
                 else if (menuItem.getTitle().toString().equals(getResources().getString(R.string.title_dashboard))){
                     title.setText(getResources().getString(R.string.title_dashboard));
                     showFragment(dashboardFragment);
+                    menu.setOnClickListener(speedMenuOnClick);
                     //Log.e("导航栏2", String.valueOf(id));
                 }
                 else if (menuItem.getTitle().toString().equals(getResources().getString(R.string.title_notifications))){
                     title.setText(getResources().getString(R.string.title_notifications));
                     showFragment(notificationsFragment);
                     //Log.e("导航栏3", String.valueOf(id));
+
                 }
                 /*
                 switch (id){
@@ -242,7 +398,6 @@ public class BottomNavigation extends FragmentActivity{
                 setStatusBarColor(BottomNavigation.this);
             }
         });
-
         /*
         //右上角菜单
         final ImageView menu=findViewById(R.id.menu);
@@ -324,6 +479,25 @@ public class BottomNavigation extends FragmentActivity{
         //ConstraintLayout parent1 = (ConstraintLayout) ((ViewGroup)findViewById(android.R.id.content)).getChildAt(0);
         parent2.removeView(rightLowerButton);
         change_color_container.addView(rightLowerButton);
+        //监听颜色按钮点击
+        rlIcon1.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(BottomNavigation.this,"点击颜色按钮1",Toast.LENGTH_SHORT).show();
+            }
+        });
+        rlIcon2.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+            }
+        });
+        rlIcon3.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                getWindow().getDecorView().setBackgroundColor(getResources().getColor(R.color.green));
+            }
+        });
         //监听抽屉关闭事件
         drawerLayout.addDrawerListener(new DrawerLayout.DrawerListener() {
             @Override
@@ -371,6 +545,23 @@ public class BottomNavigation extends FragmentActivity{
         }
 
          */
+        //设置抽屉中按钮的监听
+        LinearLayout editinfo=findViewById(R.id.editinfo);
+        LinearLayout editpassword=findViewById(R.id.editpassword);
+        editinfo.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent=new Intent(BottomNavigation.this,EditInfo.class);
+                startActivity(intent);
+            }
+        });
+        editpassword.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent=new Intent(BottomNavigation.this,EditPassword.class);
+                startActivity(intent);
+            }
+        });
 
     }
 
