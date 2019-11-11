@@ -47,5 +47,10 @@
     <string name="new_password">新密码</string>
     <string name="confirm_new_password">确认密码</string>
     <string name="edit_password">修改密码</string>
-
+    <string name="ip">http://118.31.22.89:8088</string>
+    <string name="login">/PhoneInfo/user/login</string>
+    <string name="register">/PhoneInfo/user/addUser</string>
+    <string name="forgetpassword">/PhoneInfo/user/findpasswd</string>
+    <string name="editinfo">/PhoneInfo/user/modifyUser</string>
+    <string name="queryinfo">/PhoneInfo/user/queryUser</string>
 </resources>

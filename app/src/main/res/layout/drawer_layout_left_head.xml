@@ -49,7 +49,8 @@
                 app:riv_border_color="@color/white"
                 app:riv_border_width="2dp"
                 app:riv_corner_radius="5dp"
-                android:src="@drawable/default_head">
+                android:src="@drawable/default_head"
+                android:id="@+id/headimage">
             </com.makeramen.roundedimageview.RoundedImageView>
             <LinearLayout
                 android:layout_width="wrap_content"
@@ -63,7 +64,8 @@
                     android:text="王小明"
                     android:layout_width="wrap_content"
                     android:layout_height="35dp"
-                    android:layout_marginTop="3dp"/>
+                    android:layout_marginTop="3dp"
+                    android:id="@+id/nickname"/>
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -73,13 +75,16 @@
                         android:layout_height="20dp"
                         android:textSize="14dp"
                         android:textColor="@color/white"
-                        android:text="12345678901">
+                        android:text="12345678901"
+                        android:id="@+id/phonenumber">
                     </TextView>
+
                     <ImageView
-                        android:layout_width="17dp"
+                        android:layout_width="13dp"
                         android:layout_height="20dp"
+                        android:layout_marginLeft="15dp"
                         android:src="@drawable/change_account"
-                        android:layout_marginLeft="15dp">
+                        android:id="@+id/change_account">
                     </ImageView>
                 </LinearLayout>
             </LinearLayout>

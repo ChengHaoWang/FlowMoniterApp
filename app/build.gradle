@@ -51,6 +51,7 @@ dependencies {
     implementation 'com.scwang.smartrefresh:SmartRefreshLayout:1.1.0'  //1.0.5及以前版本的老用户升级需谨慎，API改动过大
     implementation 'com.scwang.smartrefresh:SmartRefreshHeader:1.1.0'  //没有使用特殊Header，可以不加这行
     implementation 'com.github.recruit-lifestyle:WaveSwipeRefreshLayout:1.6'
+    implementation 'com.squareup.okhttp3:okhttp:4.2.2'
     //implementation 'org.apache.commons:commons-collections4:4.1'
     //implementation 'com.android.support:appcompat-v7:28.0.0'
     //add

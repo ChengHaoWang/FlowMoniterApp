@@ -9,6 +9,7 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.ActionBar;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.AppOpsManager;
 import android.app.Service;
 import android.app.usage.UsageStats;
@@ -20,6 +21,8 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.Settings;
 import android.telephony.TelephonyManager;
 import android.text.Editable;
@@ -33,9 +36,23 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
 import java.net.NetworkInterface;
 import java.util.Collections;
 import java.util.List;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.FormBody;
+import okhttp3.Headers;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 import static com.example.test.ApkTool.REQUEST_READ_PHONE_STATE;
 
@@ -44,10 +61,25 @@ public class MainActivity extends AppCompatActivity {
     private static final int MY_PERMISSIONS_REQUEST_READ_CONTACTS = 3;
     public final static int REQUEST_ACTION_USAGE_ACCESS_SETTINGS = 1;
     private SharedPreferences sp;
+    public static final MediaType JSON
+            = MediaType.get("application/json; charset=utf-8");
+    private long validtime=1;
+    //private final OkHttpClient client = new OkHttpClient();
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        //sp = getSharedPreferences("User", Context.MODE_PRIVATE);
+        //免登陆判断
+        sp = getSharedPreferences("userInfo", 0);
+        String name=sp.getString("username", "");
+        String pass =sp.getString("password", "");
+        String login_status=sp.getString("loginstatus","");
+        long starttime=sp.getLong("starttime",0);
+        if (login_status.equals("true")&&System.currentTimeMillis()<(starttime+validtime*86400000)){
+            Intent intent=new Intent(MainActivity.this,BottomNavigation.class);
+            //startActivity(intent);
+        }
         super.onCreate(savedInstanceState);
         //隐藏actionbar
         //getSupportActionBar().hide();
@@ -182,29 +214,82 @@ public class MainActivity extends AppCompatActivity {
         });
 
         //登录点击事件
-        sp = getSharedPreferences("userInfo", 0);
-        String name=sp.getString("USER_NAME", "");
-        String pass =sp.getString("PASSWORD", "");
+
         confirm.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 //向服务器发送账号密码数据，验证登录请求
                 if (confirm.getTag().equals("clickable")){
-                    String accout_text=account.getText().toString();
-                    String password_text=password.getText().toString();
-                    //request
+                    final String accout_text=account.getText().toString();
+                    final String password_text=password.getText().toString();
+
+                    if (!accout_text.equals("")&&!password_text.equals("")){
+                        //request
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                RequestBody requestBody = new FormBody.Builder()
+                                        .add("username",accout_text)
+                                        .add("password",password_text)
+                                        .build();
+
+                                String url = getResources().getString(R.string.ip)+getResources().getString(R.string.login);
+                                OkHttpClient okHttpClient = new OkHttpClient();
+                                final Request request = new Request.Builder()
+                                        .url(url)
+                                        .post(requestBody)
+                                        .build();
+                                Call call = okHttpClient.newCall(request);
+                                call.enqueue(new Callback() {
+                                    @Override
+                                    public void onFailure(Call call, IOException e) {
+                                        Log.e("网络请求","请求失败");
+
+                                    }
+                                    @Override
+                                    public void onResponse(Call call, Response response) throws IOException {
+                                        String respose_text = response.body().string();
+                                        JSONObject jsonObject = null;
+                                        Log.e("网络请求",respose_text);
+                                        try {
+                                            jsonObject = new JSONObject(respose_text);
+                                            String result = jsonObject.optString("result", null);
+                                            if (result.equals("success")){
+                                                SharedPreferences.Editor editor =sp.edit();
+                                                editor.putString("username", accout_text);
+                                                editor.putString("password", password_text);
+                                                editor.putString("loginstatus","true");
+                                                editor.putLong("starttime",System.currentTimeMillis());
+                                                editor.commit();
+                                                Intent intent=new Intent(MainActivity.this,BottomNavigation.class);
+                                                startActivity(intent);
+                                            }else {
+                                                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        AlertDialog dialog=new AlertDialog.Builder(MainActivity.this).setMessage("请检查用户名和密码").create();
+                                                        dialog.show();
+                                                    }
+                                                });
+                                            }
+                                        } catch (JSONException e) {
+                                            e.printStackTrace();
+                                        }
+
+                                    }
+                                });
+                            }
+                        }).start();
+                    }
 
                     //Intent intent=new Intent(MainActivity.this,MainInterface.class);
                     //startActivity(intent);
-                    SharedPreferences.Editor editor =sp.edit();
-                    editor.putString("USER_NAME", accout_text);
-                    editor.putString("PASSWORD", password_text);
-                    editor.commit();
+
                 }
 
                 //测试用，测完删
-                Intent intent=new Intent(MainActivity.this,BottomNavigation.class);
-                startActivity(intent);
+                //Intent intent=new Intent(MainActivity.this,BottomNavigation.class);
+                //startActivity(intent);
 
             }
         });

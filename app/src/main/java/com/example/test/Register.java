@@ -10,6 +10,9 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -18,6 +21,21 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.FormBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+
+import static com.example.test.MainActivity.JSON;
 
 public class Register extends AppCompatActivity {
 
@@ -42,12 +60,14 @@ public class Register extends AppCompatActivity {
             }
         });
         //注册按钮
+        /*
         register.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
             }
         });
+         */
         //获取输入内容
         final EditText phone_number=findViewById(R.id.phone_number);
         final EditText password=findViewById(R.id.password);
@@ -75,14 +95,14 @@ public class Register extends AppCompatActivity {
         register.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String phnoe_number_text=phone_number.getText().toString().trim();
-                String password_text=password.getText().toString().trim();
-                String confirm_password_text=confirm_password.getText().toString().trim();
-                String username_text=username.getText().toString().trim();
-                String job_text=job.getText().toString().trim();
-                String [] question_array=getResources().getStringArray(R.array.question);
-                String question_text=question_array[question_id[0]];
-                String answer_text=answer.getText().toString().trim();
+                final String phnoe_number_text=phone_number.getText().toString().trim();
+                final String password_text=password.getText().toString().trim();
+                final String confirm_password_text=confirm_password.getText().toString().trim();
+                final String username_text=username.getText().toString().trim();
+                final String job_text=job.getText().toString().trim();
+                final String [] question_array=getResources().getStringArray(R.array.question);
+                final String question_text=question_array[question_id[0]];
+                final String answer_text=answer.getText().toString().trim();
 
                 if (!phnoe_number_text.equals("")&&!password_text.equals("")&&!confirm_password_text.equals("")&&!username_text.equals("")&&!job_text.equals("")
                         &&!question_text.equals("")&&!answer_text.equals("")){
@@ -96,9 +116,61 @@ public class Register extends AppCompatActivity {
                     }
                     else {
                         //request请求
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                RequestBody requestBody = new FormBody.Builder()
+                                        .add("username",phnoe_number_text)
+                                        .add("password",password_text)
+                                        .add("nickname",username_text)
+                                        .add("company",null)
+                                        .add("duty",job_text)
+                                        .add("question",question_text)
+                                        .add("answer",answer_text)
+                                        .add("signature","")
+                                        .add("email","")
+                                        .add("headimg","")
+                                        .build();
+                                String url = getResources().getString(R.string.ip)+getResources().getString(R.string.register);
+                                OkHttpClient okHttpClient = new OkHttpClient();
+                                final Request request = new Request.Builder()
+                                        .url(url)
+                                        .post(requestBody)
+                                        .build();
+                                Call call = okHttpClient.newCall(request);
+                                call.enqueue(new Callback() {
+                                    @Override
+                                    public void onFailure(Call call, IOException e) {
+                                        Log.e("网络请求","请求失败");
+                                        new Handler(Looper.getMainLooper()).post(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                AlertDialog dialog=new AlertDialog.Builder(Register.this).setMessage("注册失败").create();
+                                                dialog.show();
+                                            }
+                                        });
 
-                        AlertDialog dialog=new AlertDialog.Builder(Register.this).setMessage("注册成功").create();
-                        dialog.show();
+                                    }
+                                    @Override
+                                    public void onResponse(Call call, Response response) throws IOException {
+                                        String result = response.body().string();
+                                        Log.e("网络请求","请求成功");
+                                        new Handler(Looper.getMainLooper()).post(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                AlertDialog dialog=new AlertDialog.Builder(Register.this).setMessage("注册成功").create();
+                                                dialog.show();
+                                            }
+                                        });
+
+                                        finish();
+                                        //Intent intent=new Intent(Register.this,MainActivity.class);
+                                        //startActivity(intent);
+                                    }
+                                });
+                            }
+                        }).start();
+
                     }
                 }
             }

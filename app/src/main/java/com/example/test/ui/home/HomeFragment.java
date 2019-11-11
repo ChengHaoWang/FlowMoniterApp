@@ -29,6 +29,7 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProviders;
 
 import com.example.test.AppItem;
+import com.example.test.MainActivity;
 import com.example.test.R;
 
 import org.greenrobot.eventbus.EventBus;

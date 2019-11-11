@@ -6,10 +6,13 @@ import android.animation.PropertyValuesHolder;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.PersistableBundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -58,11 +61,22 @@ import com.oguzdev.circularfloatingactionmenu.library.SubActionButton;
 
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
+import org.json.JSONException;
+import org.json.JSONObject;
 
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.NetworkInterface;
 import java.util.Collections;
 import java.util.List;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.FormBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 import static android.widget.LinearLayout.*;
 import static com.example.test.ApkTool.REQUEST_READ_PHONE_STATE;
@@ -78,6 +92,7 @@ public class BottomNavigation extends FragmentActivity{
     private Fragment currentFragment=new Fragment();
     private FragmentManager manager;
     private ImageView menu;
+    private SharedPreferences sp;
 
     //为弹出窗口实现监听类
     private View.OnClickListener homeItemsOnClick = new View.OnClickListener() {
@@ -470,7 +485,7 @@ public class BottomNavigation extends FragmentActivity{
                 animation.start();
             }
         });
-        View drawer=findViewById(R.id.drawer_page);
+        final View drawer=findViewById(R.id.drawer_page);
         LinearLayout change_color_container=drawer.findViewById(R.id.color_change_container);
         //将颜色按钮填充进布局
         LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
@@ -531,10 +546,15 @@ public class BottomNavigation extends FragmentActivity{
         //填充抽屉内容
         TextView phonetype=drawer.findViewById(R.id.phone_type);
         TextView macaddress=drawer.findViewById(R.id.macaddress);
-        TextView workspace=drawer.findViewById(R.id.worksapce);
-        TextView position=drawer.findViewById(R.id.position);
-        TextView contactway=drawer.findViewById(R.id.contact_way);
-        TextView personaldes=drawer.findViewById(R.id.personal_des);
+        final TextView workspace=drawer.findViewById(R.id.worksapce);
+        final TextView position=drawer.findViewById(R.id.position);
+        final TextView contactway=drawer.findViewById(R.id.contact_way);
+        final TextView personaldes=drawer.findViewById(R.id.personal_des);
+
+        final RoundedImageView headimage=drawer.findViewById(R.id.headimage);
+        final TextView nickname=drawer.findViewById(R.id.nickname);
+        TextView phonenumber=drawer.findViewById(R.id.phonenumber);
+
         GetPhoneInfo();
         if (!model.equals("")){
             phonetype.setText(model);
@@ -543,11 +563,76 @@ public class BottomNavigation extends FragmentActivity{
         if (!mac.equals("")){
             macaddress.setText(mac);
         }
-
          */
+        //初始化请求
+        sp = getSharedPreferences("userInfo", 0);
+        final String username=sp.getString("username", "");
+        phonenumber.setText(username);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                RequestBody requestBody = new FormBody.Builder()
+                        .add("username",username)
+                        .build();
+
+                String url = getResources().getString(R.string.ip)+getResources().getString(R.string.queryinfo);
+                OkHttpClient okHttpClient = new OkHttpClient();
+                final Request request = new Request.Builder()
+                        .url(url)
+                        .post(requestBody)
+                        .build();
+                Call call = okHttpClient.newCall(request);
+                call.enqueue(new Callback() {
+                    @Override
+                    public void onFailure(Call call, IOException e) {
+                        Log.e("网络请求","请求失败");
+
+                    }
+                    @Override
+                    public void onResponse(Call call, Response response) throws IOException {
+                        String respose_text = response.body().string();
+                        JSONObject jsonObject1 = null;
+                        JSONObject jsonObject2 = null;
+                        Log.e("网络请求",respose_text);
+                        try {
+                            jsonObject1 = new JSONObject(respose_text);
+                            String result1 = jsonObject1.optString("result", null);
+                            jsonObject2=new JSONObject(result1);
+
+                            final String icompany=jsonObject2.optString("company",null);
+                            final String iduty=jsonObject2.optString("duty",null);
+                            final String iemail=jsonObject2.optString("email",null);
+                            final String isign=jsonObject2.optString("signature",null);
+                            String iheadsrc=jsonObject2.optString("headimg",null);
+                            final String inickname=jsonObject2.optString("nickname",null);
+
+                            new Handler(Looper.getMainLooper()).post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    //head_image_upload=findViewById(R.id.head_image_upload);
+                                    workspace.setText(icompany);
+                                    position.setText(iduty);
+                                    contactway.setText(iemail);
+                                    personaldes.setText(isign);
+
+
+                                    nickname.setText(inickname);
+                                }
+                            });
+
+
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+
+                    }
+                });
+            }
+        }).start();
         //设置抽屉中按钮的监听
         LinearLayout editinfo=findViewById(R.id.editinfo);
         LinearLayout editpassword=findViewById(R.id.editpassword);
+        ImageView change_account=findViewById(R.id.change_account);
         editinfo.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -559,6 +644,14 @@ public class BottomNavigation extends FragmentActivity{
             @Override
             public void onClick(View view) {
                 Intent intent=new Intent(BottomNavigation.this,EditPassword.class);
+                startActivity(intent);
+            }
+        });
+
+        change_account.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent=new Intent(BottomNavigation.this, MainActivity.class);
                 startActivity(intent);
             }
         });

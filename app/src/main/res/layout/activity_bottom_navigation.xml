@@ -29,7 +29,7 @@
                     android:layout_width="30dp"
                     android:layout_height="30dp"
                     android:id="@+id/nav_head"
-                    android:src="@drawable/default_head"
+                    android:src="http://img.netbian.com/file/2019/0509/14e5ccc31b907bd59accba429efa3763.jpg"
                     android:layout_marginLeft="15dp"
                     android:scaleType="centerCrop"
                     app:riv_corner_radius="5dp">
