@@ -21,11 +21,15 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
+import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.net.NetworkInterface;
+import java.util.Collections;
+import java.util.List;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -38,6 +42,33 @@ import okhttp3.Response;
 import static com.example.test.MainActivity.JSON;
 
 public class Register extends AppCompatActivity {
+    private static String getNewMac() {
+        try {
+            List<NetworkInterface> all = Collections.list(NetworkInterface.getNetworkInterfaces());
+            for (NetworkInterface nif : all) {
+                if (!nif.getName().equalsIgnoreCase("wlan0"))
+                    continue;
+
+                byte[] macBytes = nif.getHardwareAddress();
+                if (macBytes == null) {
+                    return null;
+                }
+
+                StringBuilder res1 = new StringBuilder();
+                for (byte b : macBytes) {
+                    res1.append(String.format("%02X:", b));
+                }
+
+                if (res1.length() > 0) {
+                    res1.deleteCharAt(res1.length() - 1);
+                }
+                return res1.toString();
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
@@ -48,7 +79,7 @@ public class Register extends AppCompatActivity {
         setContentView(R.layout.activity_register);
 
         setStatusBarColor(Register.this);
-        ImageView goback=findViewById(R.id.goback);
+        LinearLayout goback=findViewById(R.id.goback);
         LinearLayout register=findViewById(R.id.register);
 
         //返回按钮
@@ -107,6 +138,7 @@ public class Register extends AppCompatActivity {
                 if (!phnoe_number_text.equals("")&&!password_text.equals("")&&!confirm_password_text.equals("")&&!username_text.equals("")&&!job_text.equals("")
                         &&!question_text.equals("")&&!answer_text.equals("")){
                     if (phnoe_number_text.length()!=11){
+
                         AlertDialog dialog=new AlertDialog.Builder(Register.this).setMessage("请输入正确的手机号码").create();
                         dialog.show();
                     }
@@ -119,17 +151,22 @@ public class Register extends AppCompatActivity {
                         new Thread(new Runnable() {
                             @Override
                             public void run() {
+                                String model = android.os.Build.MODEL; // 手机型号
+                                //this.release = android.os.Build.VERSION.RELEASE; // android系统版本号
+                                String mac = getNewMac();
                                 RequestBody requestBody = new FormBody.Builder()
                                         .add("username",phnoe_number_text)
                                         .add("password",password_text)
                                         .add("nickname",username_text)
-                                        .add("company",null)
+                                        .add("company","")
                                         .add("duty",job_text)
                                         .add("question",question_text)
                                         .add("answer",answer_text)
                                         .add("signature","")
                                         .add("email","")
                                         .add("headimg","")
+                                        .add("macaddress",mac)
+                                        .add("model",model)
                                         .build();
                                 String url = getResources().getString(R.string.ip)+getResources().getString(R.string.register);
                                 OkHttpClient okHttpClient = new OkHttpClient();
@@ -145,8 +182,9 @@ public class Register extends AppCompatActivity {
                                         new Handler(Looper.getMainLooper()).post(new Runnable() {
                                             @Override
                                             public void run() {
-                                                AlertDialog dialog=new AlertDialog.Builder(Register.this).setMessage("注册失败").create();
-                                                dialog.show();
+                                                Toast.makeText(Register.this,"注册失败",Toast.LENGTH_SHORT).show();
+                                                //AlertDialog dialog=new AlertDialog.Builder(Register.this).setMessage("注册失败").create();
+                                                //dialog.show();
                                             }
                                         });
 
@@ -158,11 +196,11 @@ public class Register extends AppCompatActivity {
                                         new Handler(Looper.getMainLooper()).post(new Runnable() {
                                             @Override
                                             public void run() {
-                                                AlertDialog dialog=new AlertDialog.Builder(Register.this).setMessage("注册成功").create();
-                                                dialog.show();
+                                                Toast.makeText(Register.this,"注册成功",Toast.LENGTH_SHORT).show();
+                                                //AlertDialog dialog=new AlertDialog.Builder(Register.this).setMessage("注册成功").create();
+                                                //dialog.show();
                                             }
                                         });
-
                                         finish();
                                         //Intent intent=new Intent(Register.this,MainActivity.class);
                                         //startActivity(intent);

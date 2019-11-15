@@ -49,6 +49,7 @@ import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
+import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.bitmap.CenterCrop;
 import com.example.test.ui.dashboard.DashboardFragment;
 import com.example.test.ui.home.HomeFragment;
@@ -551,7 +552,8 @@ public class BottomNavigation extends FragmentActivity{
         final TextView contactway=drawer.findViewById(R.id.contact_way);
         final TextView personaldes=drawer.findViewById(R.id.personal_des);
 
-        final RoundedImageView headimage=drawer.findViewById(R.id.headimage);
+        final RoundedImageView drawerheadimage=drawer.findViewById(R.id.headimage);//导航栏头像
+        final RoundedImageView mainheadimage=findViewById(R.id.nav_head);
         final TextView nickname=drawer.findViewById(R.id.nickname);
         TextView phonenumber=drawer.findViewById(R.id.phonenumber);
 
@@ -559,11 +561,11 @@ public class BottomNavigation extends FragmentActivity{
         if (!model.equals("")){
             phonetype.setText(model);
         }
-        /*
+
         if (!mac.equals("")){
             macaddress.setText(mac);
         }
-         */
+
         //初始化请求
         sp = getSharedPreferences("userInfo", 0);
         final String username=sp.getString("username", "");
@@ -586,7 +588,6 @@ public class BottomNavigation extends FragmentActivity{
                     @Override
                     public void onFailure(Call call, IOException e) {
                         Log.e("网络请求","请求失败");
-
                     }
                     @Override
                     public void onResponse(Call call, Response response) throws IOException {
@@ -603,7 +604,7 @@ public class BottomNavigation extends FragmentActivity{
                             final String iduty=jsonObject2.optString("duty",null);
                             final String iemail=jsonObject2.optString("email",null);
                             final String isign=jsonObject2.optString("signature",null);
-                            String iheadsrc=jsonObject2.optString("headimg",null);
+                            final String iheadsrc=jsonObject2.optString("headimg",null);
                             final String inickname=jsonObject2.optString("nickname",null);
 
                             new Handler(Looper.getMainLooper()).post(new Runnable() {
@@ -614,17 +615,24 @@ public class BottomNavigation extends FragmentActivity{
                                     position.setText(iduty);
                                     contactway.setText(iemail);
                                     personaldes.setText(isign);
-
-
+                                    //String url1 = getResources().getString(R.string.ip)+getResources().getString(R.string.testpic);
+                                    Glide.with(BottomNavigation.this)
+                                            .load(iheadsrc)
+                                            .centerCrop()
+                                            .placeholder(R.drawable.default_head)
+                                            .into(drawerheadimage);
+                                    Glide.with(BottomNavigation.this)
+                                            .load(iheadsrc)
+                                            .centerCrop()
+                                            .placeholder(R.drawable.default_head)
+                                            .into(mainheadimage);
                                     nickname.setText(inickname);
                                 }
                             });
 
-
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
-
                     }
                 });
             }
@@ -712,9 +720,9 @@ public class BottomNavigation extends FragmentActivity{
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     public void GetPhoneInfo() {
-        this.sdkNum = android.os.Build.VERSION.SDK; // SDK号
+        //this.sdkNum = android.os.Build.VERSION.SDK; // SDK号
         this.model = android.os.Build.MODEL; // 手机型号
-        this.release = android.os.Build.VERSION.RELEASE; // android系统版本号
+        //this.release = android.os.Build.VERSION.RELEASE; // android系统版本号
         this.mac = getNewMac();
     }
 

@@ -3,6 +3,7 @@ package com.example.test.ui.home;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -28,12 +29,21 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProviders;
 
+import com.bumptech.glide.Glide;
 import com.example.test.AppItem;
+import com.example.test.Appinfo;
+import com.example.test.BottomNavigation;
 import com.example.test.MainActivity;
 import com.example.test.R;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import org.greenrobot.eventbus.EventBus;
+import org.json.JSONException;
+import org.json.JSONObject;
 
+import java.io.IOException;
+import java.net.NetworkInterface;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -42,6 +52,13 @@ import java.util.Date;
 import java.util.List;
 
 import jp.co.recruit_lifestyle.android.widget.WaveSwipeRefreshLayout;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.FormBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 import static com.example.test.ApkTool.scanLocalInstallAppInfoList;
 import static com.example.test.BottomNavigation.homePopWindow;
@@ -64,6 +81,8 @@ public class HomeFragment extends Fragment {
     private WaveSwipeRefreshLayout refreshLayout;
     private ListView applistview;
     private ProgressDialog progressDialog;
+    private SharedPreferences sp;
+    private String username;
     //protected WeakReference<View> mRootView;//缓存view
     //为弹出窗口实现监听类
     /*
@@ -125,7 +144,37 @@ public class HomeFragment extends Fragment {
         cal.set(Calendar.MILLISECOND, 0);
         return cal.getTime();
     }
+    /**
+     * 通过网络接口取mac
+     * @return
+     */
+    private static String getNewMac() {
+        try {
+            List<NetworkInterface> all = Collections.list(NetworkInterface.getNetworkInterfaces());
+            for (NetworkInterface nif : all) {
+                if (!nif.getName().equalsIgnoreCase("wlan0"))
+                    continue;
 
+                byte[] macBytes = nif.getHardwareAddress();
+                if (macBytes == null) {
+                    return null;
+                }
+
+                StringBuilder res1 = new StringBuilder();
+                for (byte b : macBytes) {
+                    res1.append(String.format("%02X:", b));
+                }
+
+                if (res1.length() > 0) {
+                    res1.deleteCharAt(res1.length() - 1);
+                }
+                return res1.toString();
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -145,9 +194,58 @@ public class HomeFragment extends Fragment {
 */
         //Date a=getTimesmorning2();
         //设置走马灯被选中
-        TextView rolltext=root.findViewById(R.id.rolltext);
+        final TextView rolltext=root.findViewById(R.id.rolltext);
         rolltext.setSelected(true);
 
+        sp = getActivity().getSharedPreferences("userInfo", 0);
+        username=sp.getString("username", "");
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                RequestBody requestBody = new FormBody.Builder()
+                        .add("username",username)
+                        .build();
+
+                String url = getResources().getString(R.string.ip)+getResources().getString(R.string.queryinfo);
+                OkHttpClient okHttpClient = new OkHttpClient();
+                final Request request = new Request.Builder()
+                        .url(url)
+                        .post(requestBody)
+                        .build();
+                Call call = okHttpClient.newCall(request);
+                call.enqueue(new Callback() {
+                    @Override
+                    public void onFailure(Call call, IOException e) {
+                        Log.e("网络请求","请求失败");
+                    }
+                    @Override
+                    public void onResponse(Call call, Response response) throws IOException {
+                        String respose_text = response.body().string();
+                        //JSONObject jsonObject1 = null;
+                        JSONObject jsonObject = null;
+                        Log.e("网络请求",respose_text);
+                        try {
+                            //jsonObject1 = new JSONObject(respose_text);
+                            //String result1 = jsonObject1.optString("result", null);
+                            jsonObject=new JSONObject(respose_text);
+                            final String iannouncement=jsonObject.optString("announcement",null);
+                            new Handler(Looper.getMainLooper()).post(new Runnable() {
+                                @Override
+                                public void run() {
+                                if (!iannouncement.equals("")){
+                                    rolltext.setText(iannouncement);
+                                }
+                                }
+                            });
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+
+                    }
+                });
+            }
+        }).start();
         //获取流量信息
         new Thread(new Runnable() {
             @Override
@@ -197,6 +295,7 @@ public class HomeFragment extends Fragment {
                     //Log.e("传递消息","消息已发送");
                     }
                 });
+                transToServer();
             }
         }).start();
         startTime=firstdayOfmonth;
@@ -223,7 +322,12 @@ public class HomeFragment extends Fragment {
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        homePopWindow.backgroundAlpha(getActivity(), 1f);
+                        new Handler(Looper.getMainLooper()).post(new Runnable() {
+                            @Override
+                            public void run() {
+                                homePopWindow.backgroundAlpha(getActivity(), 1f);
+                            }
+                        });
                         final CheckBox positiveOrderItem = homePopWindow.view.findViewById(R.id.positiveOrder);
                         final CheckBox reverseOrderItem = homePopWindow.view.findViewById(R.id.reverseOrder);
                         final CheckBox dayOrderItem = homePopWindow.view.findViewById(R.id.dayOrder);
@@ -256,7 +360,7 @@ public class HomeFragment extends Fragment {
                                             getActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
                                         }
                                     });
-
+                                    transToServer();
                                 }
                                 Collections.sort(tempAppList, new Comparator<AppItem>() {
                                     @Override
@@ -313,6 +417,7 @@ public class HomeFragment extends Fragment {
                                             getActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
                                         }
                                     });
+                                    transToServer();
                                 }
                                 Collections.sort(tempAppList, new Comparator<AppItem>() {
                                     @Override
@@ -367,6 +472,7 @@ public class HomeFragment extends Fragment {
                                             getActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
                                         }
                                     });
+                                    transToServer();
                                 }
                                 Collections.sort(tempAppList, new Comparator<AppItem>() {
                                     @Override
@@ -420,6 +526,7 @@ public class HomeFragment extends Fragment {
                                             getActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
                                         }
                                     });
+                                    transToServer();
                                 }
                                 Collections.sort(tempAppList, new Comparator<AppItem>() {
                                     @Override
@@ -474,6 +581,7 @@ public class HomeFragment extends Fragment {
                                             getActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
                                         }
                                     });
+                                    transToServer();
                                 }
                                 Collections.sort(tempAppList, new Comparator<AppItem>() {
                                     @Override
@@ -527,6 +635,7 @@ public class HomeFragment extends Fragment {
                                             getActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
                                         }
                                     });
+                                    transToServer();
                                 }
                                 Collections.sort(tempAppList, new Comparator<AppItem>() {
                                     @Override
@@ -589,6 +698,98 @@ public class HomeFragment extends Fragment {
 
         return root;
     }
+
+    private void transToServer() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+
+                if (appList.size()!=0){
+                    List<Appinfo> appinfoList=new ArrayList<>();
+                    switch (timeFlag){
+                        case 0:
+                            for (int i=0;i<appList.size();i++){
+                                Appinfo appinfo=new Appinfo();
+                                appinfo.setAppIcon("");
+                                appinfo.setAppId(String.valueOf(appList.get(i).getAppId()));
+                                appinfo.setAppName(appList.get(i).getAppName());
+                                appinfo.setDescription("");
+                                appinfo.setMacaddress(getNewMac());
+                                appinfo.setMonthTotalString(appList.get(i).getTotalFlowString());
+                                appinfo.setWeekTotalFlowString("");
+                                appinfo.setDayTotalFlowString("");
+                                appinfo.setTotalTime(appList.get(i).getTotalTime());
+                                appinfo.setUsername(username);
+                                appinfoList.add(appinfo);
+                            }
+                            break;
+                        case 1:
+                            for (int i=0;i<appList.size();i++){
+                                Appinfo appinfo=new Appinfo();
+                                appinfo.setAppIcon("");
+                                appinfo.setAppId(String.valueOf(appList.get(i).getAppId()));
+                                appinfo.setAppName(appList.get(i).getAppName());
+                                appinfo.setDescription("");
+                                appinfo.setMacaddress(getNewMac());
+                                appinfo.setMonthTotalString("");
+                                appinfo.setWeekTotalFlowString(appList.get(i).getTotalFlowString());
+                                appinfo.setDayTotalFlowString("");
+                                appinfo.setTotalTime(appList.get(i).getTotalTime());
+                                appinfo.setUsername(username);
+                                appinfoList.add(appinfo);
+                            }
+                            break;
+                        case 2:
+                            for (int i=0;i<appList.size();i++){
+                                Appinfo appinfo=new Appinfo();
+                                appinfo.setAppIcon("");
+                                appinfo.setAppId(String.valueOf(appList.get(i).getAppId()));
+                                appinfo.setAppName(appList.get(i).getAppName());
+                                appinfo.setDescription("");
+                                appinfo.setMacaddress(getNewMac());
+                                appinfo.setMonthTotalString("");
+                                appinfo.setWeekTotalFlowString("");
+                                appinfo.setDayTotalFlowString(appList.get(i).getTotalFlowString());
+                                appinfo.setTotalTime(appList.get(i).getTotalTime());
+                                appinfo.setUsername(username);
+                                appinfoList.add(appinfo);
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+
+                    Gson gson = new Gson();
+                    //String jsonString = gson.toJson(appinfoList);
+                    String jsonArray = gson.toJson(appinfoList, new TypeToken<List<Appinfo>>() {}.getType());
+                    RequestBody requestBody = new FormBody.Builder()
+                            .add("applist",jsonArray)
+                            .build();
+
+                    String url = getResources().getString(R.string.ip)+getResources().getString(R.string.addappinfo);
+                    OkHttpClient okHttpClient = new OkHttpClient();
+                    final Request request = new Request.Builder()
+                            .url(url)
+                            .post(requestBody)
+                            .build();
+                    Call call = okHttpClient.newCall(request);
+                    call.enqueue(new Callback() {
+                        @Override
+                        public void onFailure(Call call, IOException e) {
+                            Log.e("网络请求","请求失败");
+                        }
+                        @Override
+                        public void onResponse(Call call, Response response) throws IOException {
+                            String respose_text = response.body().string();
+                            Log.e("网络请求",respose_text);
+
+                        }
+                    });
+                }
+            }
+        }).start();
+    }
+
     private class Task extends AsyncTask<Void, Void, String[]> {
 
         @RequiresApi(api = Build.VERSION_CODES.M)
@@ -615,6 +816,7 @@ public class HomeFragment extends Fragment {
                     appAdapter.notifyDataSetChanged();
                 }
             });
+            transToServer();
             test[0]="true";
             return test;
         }

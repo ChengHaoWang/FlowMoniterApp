@@ -18,6 +18,7 @@ import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -42,7 +43,7 @@ public class ForgetPassword extends AppCompatActivity {
         setContentView(R.layout.activity_forget_password);
         setStatusBarColor(ForgetPassword.this);
 
-        ImageView goback=findViewById(R.id.goback);
+        LinearLayout goback=findViewById(R.id.goback);
         LinearLayout confirm_forgetpassword=findViewById(R.id.confirm_forgetpassword);
         final EditText username=findViewById(R.id.username);
         final EditText answer=findViewById(R.id.answer_forgetpassword);
@@ -97,8 +98,9 @@ public class ForgetPassword extends AppCompatActivity {
                                 @Override
                                 public void onFailure(Call call, IOException e) {
                                     Log.e("网络请求","请求失败");
-                                    AlertDialog dialog=new AlertDialog.Builder(ForgetPassword.this).setMessage("修改失败，请检查问题答案").create();
-                                    dialog.show();
+                                    Toast.makeText(ForgetPassword.this,"修改失败，请检查问题答案",Toast.LENGTH_SHORT).show();
+                                    //AlertDialog dialog=new AlertDialog.Builder(ForgetPassword.this).setMessage("修改失败，请检查问题答案").create();
+                                    //dialog.show();
                                 }
                                 @Override
                                 public void onResponse(Call call, Response response) throws IOException {
@@ -111,8 +113,9 @@ public class ForgetPassword extends AppCompatActivity {
                                         new Handler(Looper.getMainLooper()).post(new Runnable() {
                                             @Override
                                             public void run() {
-                                                AlertDialog dialog=new AlertDialog.Builder(ForgetPassword.this).setMessage(result).create();
-                                                dialog.show();
+                                                Toast.makeText(ForgetPassword.this,result,Toast.LENGTH_SHORT).show();
+                                                //AlertDialog dialog=new AlertDialog.Builder(ForgetPassword.this).setMessage(result).create();
+                                                //dialog.show();
                                             }
                                         });
                                         Intent intent=new Intent(ForgetPassword.this,MainActivity.class);

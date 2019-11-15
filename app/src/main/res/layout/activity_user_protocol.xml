@@ -6,32 +6,40 @@
     android:layout_height="match_parent"
     tools:context=".UserProtocol">
 
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="60dp"
         android:orientation="horizontal"
         android:background="@color/actionbar"
         android:id="@+id/actionbar"
         android:layout_alignParentTop="true">
-        <ImageView
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:src="@drawable/goback"
-            android:layout_gravity="center_vertical"
+        <LinearLayout
+            android:layout_width="50dp"
+            android:layout_height="60dp"
+            android:orientation="horizontal"
             android:id="@+id/goback">
-        </ImageView>
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/goback"
+                android:layout_gravity="center"
+                android:layout_marginLeft="15dp"
+                >
+            </ImageView>
+        </LinearLayout>
+
         <TextView
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:text="@string/user_protocol_title"
             android:layout_gravity="center"
             android:gravity="center"
             android:textSize="18dp"
             android:textColor="@color/white"
-            android:paddingRight="20dp">
+            android:layout_centerInParent="true"
+            >
         </TextView>
-    </LinearLayout>
+    </RelativeLayout>
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

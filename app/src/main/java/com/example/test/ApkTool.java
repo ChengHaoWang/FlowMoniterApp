@@ -57,7 +57,8 @@ public class ApkTool {
     public static PackageManager packageManager;
     public static Context context;
     private static CountDownLatch cdl ;//数值是计数器初始值
-    private static ThreadPoolExecutor poolExecutor = new ThreadPoolExecutor(10, 15,1, TimeUnit.SECONDS, new LinkedBlockingDeque<Runnable>(128));
+    private static ThreadPoolExecutor poolExecutor = new ThreadPoolExecutor(30, Integer.MAX_VALUE,1, TimeUnit.SECONDS, new LinkedBlockingDeque<Runnable>());
+    private static ThreadLocal<AppItem> threadLocalst=new ThreadLocal<AppItem>();
 
     public static String timeStamp2Date(long time, String format) {
         if (format == null || format.isEmpty()) {
@@ -108,9 +109,9 @@ public class ApkTool {
                         long firstInstallTime = packageInfo.firstInstallTime;// 应用第一次安装的时间
                         //int versionCode = packageInfo.versionCode;// 应用现在的版本号
                         //String versionName = packageInfo.versionName;// 应用现在的版本名称
-                        long lastUpdateTime = packageInfo.lastUpdateTime;// 最后一次更新时间
+                        //long lastUpdateTime = packageInfo.lastUpdateTime;// 最后一次更新时间
 
-                        String name = applicationInfo.name;// Application类名
+                        //String name = applicationInfo.name;// Application类名
                         String packageName = applicationInfo.packageName;// 包名
                         int uid = applicationInfo.uid;
                         String applicationName = (String) packageManager.getApplicationLabel(applicationInfo);//应用名称
@@ -200,8 +201,12 @@ public class ApkTool {
                             }
                         }
                         runTime=getTimeFromInt(Integer.parseInt(String.valueOf(runLongTime)));
+
+                        //数据隔离
+                        AppItem tappItem=new AppItem();
+                        threadLocalst.set(tappItem);
+                        AppItem mappItem=threadLocalst.get();
                         //为item赋值
-                        AppItem mappItem = new AppItem();
                         mappItem.setAppName(applicationName);
                         mappItem.setAppPackageName(packageName);
                         mappItem.setAppId(uid);
@@ -225,7 +230,7 @@ public class ApkTool {
                         myAppInfos.add(mappItem);
 
                         cdl.countDown();
-                        SystemClock.sleep(1000);
+                        //SystemClock.sleep(1000);
                             }
                         //});
 

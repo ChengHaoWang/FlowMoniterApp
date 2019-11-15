@@ -35,10 +35,15 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.bumptech.glide.Glide;
+import com.makeramen.roundedimageview.RoundedImageView;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.NetworkInterface;
 import java.util.Collections;
@@ -70,6 +75,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         //sp = getSharedPreferences("User", Context.MODE_PRIVATE);
+
         //免登陆判断
         sp = getSharedPreferences("userInfo", 0);
         String name=sp.getString("username", "");
@@ -80,6 +86,7 @@ public class MainActivity extends AppCompatActivity {
             Intent intent=new Intent(MainActivity.this,BottomNavigation.class);
             //startActivity(intent);
         }
+
         super.onCreate(savedInstanceState);
         //隐藏actionbar
         //getSupportActionBar().hide();
@@ -105,8 +112,6 @@ public class MainActivity extends AppCompatActivity {
             //ActivityCompat.requestPermissions(this, new String[]{Settings.ACTION_USAGE_ACCESS_SETTINGS}, REQUEST_ACTION_USAGE_ACCESS_SETTINGS);
         }
         //获取
-        final EditText account=findViewById(R.id.accountNumber);
-        final EditText password=findViewById(R.id.password);
         final ImageView account_clear=findViewById(R.id.account_clear);
         final ImageView password_clear=findViewById(R.id.password_clear);
         final ImageView password_visible=findViewById(R.id.password_visible);
@@ -114,6 +119,27 @@ public class MainActivity extends AppCompatActivity {
         TextView forget_password=findViewById(R.id.forgetpassword);
         TextView register=findViewById(R.id.register);
         TextView service_text=findViewById(R.id.service_text);
+        RoundedImageView headimage=findViewById(R.id.headimage);
+        //设置登录界面信息
+        final EditText account=findViewById(R.id.accountNumber);
+        final EditText password=findViewById(R.id.password);
+        //登录框小头像显示
+        File f;
+        String root = this.getCacheDir().toString();
+        String dirName = "pic";
+        File appDir = new File(root , dirName);
+        if (!appDir.exists()) {
+            appDir.mkdirs();
+        }
+        f = new File(appDir, "head.jpg");
+        Log.i("图片路径", f.getPath().toString());
+        if (!name.equals("")&&!pass.equals("")){
+            account.setText(name);
+            password.setText(pass);
+            if (f.exists()) {
+                Glide.with(this).load(f).into(headimage);
+            }
+        }
 
         //添加事件
         account.addTextChangedListener(new TextWatcher() {
@@ -145,6 +171,13 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+        if (!account.getText().toString().trim().equals("")&&!password.getText().toString().trim().equals("")){
+            confirm.setBackgroundResource(R.drawable.shape_back_orange);
+            confirm.setTag("clickable");
+        }else{
+            confirm.setBackgroundResource(R.drawable.shape_back_orange_unclick);
+            confirm.setTag("unclickable");
+        }
         account_clear.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -214,7 +247,6 @@ public class MainActivity extends AppCompatActivity {
         });
 
         //登录点击事件
-
         confirm.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -244,7 +276,12 @@ public class MainActivity extends AppCompatActivity {
                                     @Override
                                     public void onFailure(Call call, IOException e) {
                                         Log.e("网络请求","请求失败");
-
+                                        new Handler(Looper.getMainLooper()).post(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                Toast.makeText(MainActivity.this,"网络无法连接",Toast.LENGTH_SHORT).show();
+                                            }
+                                        });
                                     }
                                     @Override
                                     public void onResponse(Call call, Response response) throws IOException {
@@ -267,8 +304,7 @@ public class MainActivity extends AppCompatActivity {
                                                 new Handler(Looper.getMainLooper()).post(new Runnable() {
                                                     @Override
                                                     public void run() {
-                                                        AlertDialog dialog=new AlertDialog.Builder(MainActivity.this).setMessage("请检查用户名和密码").create();
-                                                        dialog.show();
+                                                        Toast.makeText(MainActivity.this,"请检查用户名和密码",Toast.LENGTH_SHORT).show();
                                                     }
                                                 });
                                             }

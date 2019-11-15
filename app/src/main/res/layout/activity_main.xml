@@ -51,11 +51,12 @@
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:scaleType="centerCrop"
-            app:riv_border_color="#333333"
+            app:riv_border_color="@color/white"
             app:riv_border_width="2dp"
             app:riv_oval="true"
             app:riv_corner_radius="30dp"
-            android:src="@drawable/default_head">
+            android:src="@drawable/default_head"
+            android:id="@+id/headimage">
         </com.makeramen.roundedimageview.RoundedImageView>
         <EditText
             android:layout_width="205dp"

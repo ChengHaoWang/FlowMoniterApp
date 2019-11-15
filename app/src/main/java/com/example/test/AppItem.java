@@ -20,8 +20,8 @@ public class AppItem {
     private int unconvertedSpeed=0;
 
     public AppItem() {
-    }
 
+    }
 
     public String getAppName() {
         return appName;

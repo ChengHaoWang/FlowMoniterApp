@@ -8,6 +8,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 import android.view.Gravity;
@@ -52,6 +53,7 @@ import java.util.TimerTask;
 import static android.content.Context.BIND_AUTO_CREATE;
 import static com.example.test.ApkTool.getInitiSpeedList;
 import static com.example.test.ApkTool.scanLocalInstallAppInfoList;
+import static com.example.test.BottomNavigation.homePopWindow;
 import static com.example.test.BottomNavigation.speedPopWindow;
 
 public class DashboardFragment extends Fragment {
@@ -194,7 +196,13 @@ public class DashboardFragment extends Fragment {
         speedPopWindow.setOnDismissListener(new PopupWindow.OnDismissListener() {
             @Override
             public void onDismiss() {
-                speedPopWindow.backgroundAlpha(getActivity(), 1f);
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        homePopWindow.backgroundAlpha(getActivity(), 1f);
+                    }
+                });
+
                 final CheckBox positiveOrderItem = speedPopWindow.view.findViewById(R.id.positiveOrder);
                 final CheckBox reverseOrderItem = speedPopWindow.view.findViewById(R.id.reverseOrder);
                 final CheckBox nameOrderItem = speedPopWindow.view.findViewById(R.id.nameOrder);
@@ -239,7 +247,9 @@ public class DashboardFragment extends Fragment {
                     tempAppList.addAll(sortAppList);
                     appList.clear();
                     appList.addAll(tempAppList);
-
+                    for (int i=0;i<10;i++){
+                        Log.e("排序：",appList.get(i).getAppName()+String.valueOf(appList.get(i).getUnconvertedSpeed()));
+                    }
                     speedAdapter.notifyDataSetChanged();
                     //通知Service数组变更
                     final List<AppItem> tappList=new ArrayList<AppItem>();

@@ -132,8 +132,8 @@ public class EditInfo extends AppCompatActivity {
     public void saveBitmap(Bitmap bmp) {
         //Log.e("保存图片", "保存图片");
         //生成路径
-        String root = Environment.getExternalStorageDirectory().getAbsolutePath();
-        String dirName = "erweima16";
+        String root = this.getCacheDir().toString();
+        String dirName = "pic";
         File appDir = new File(root , dirName);
         if (!appDir.exists()) {
             appDir.mkdirs();
@@ -174,7 +174,7 @@ public class EditInfo extends AppCompatActivity {
         StrictMode.setVmPolicy(builder.build());
         builder.detectFileUriExposure();
         //返回按钮
-        ImageView goback=findViewById(R.id.goback);
+        LinearLayout goback=findViewById(R.id.goback);
         goback.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -227,7 +227,7 @@ public class EditInfo extends AppCompatActivity {
                     @Override
                     public void onFailure(Call call, IOException e) {
                         Log.e("网络请求","请求失败");
-
+                        //Toast.makeText(EditInfo.this,"两次密码不匹配",Toast.LENGTH_SHORT).show();
                     }
                     @Override
                     public void onResponse(Call call, Response response) throws IOException {
@@ -242,7 +242,7 @@ public class EditInfo extends AppCompatActivity {
                             isign=jsonObject2.optString("signature",null);
                             inickname=jsonObject2.optString("nickname",null);
                             isex=jsonObject2.optString("sex",null);
-                            //icompany=jsonObject2.optString("company",null);
+                            icompany=jsonObject2.optString("company",null);
                             iduty=jsonObject2.optString("duty",null);
                             iemail=jsonObject2.optString("email",null);
                             iheadsrc=jsonObject2.optString("headimg",null);
@@ -343,6 +343,7 @@ public class EditInfo extends AppCompatActivity {
                                     new Handler(Looper.getMainLooper()).post(new Runnable() {
                                         @Override
                                         public void run() {
+                                            Toast.makeText(EditInfo.this,"修改失败",Toast.LENGTH_SHORT).show();
                                             //android.app.AlertDialog dialog=new android.app.AlertDialog.Builder(Register.this).setMessage("注册失败").create();
                                             //dialog.show();
                                         }
@@ -356,6 +357,10 @@ public class EditInfo extends AppCompatActivity {
                                     new Handler(Looper.getMainLooper()).post(new Runnable() {
                                         @Override
                                         public void run() {
+                                            Toast.makeText(EditInfo.this,"修改成功",Toast.LENGTH_SHORT).show();
+                                            picChangeOrNot=0;
+                                            Intent intent=new Intent(EditInfo.this,MainActivity.class);
+                                            startActivity(intent);
                                             //android.app.AlertDialog dialog=new android.app.AlertDialog.Builder(Register.this).setMessage("注册成功").create();
                                             //dialog.show();
                                         }

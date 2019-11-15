@@ -18,6 +18,7 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.Toolbar;
 
 public class UserProtocol extends AppCompatActivity {
@@ -31,7 +32,7 @@ public class UserProtocol extends AppCompatActivity {
         setContentView(R.layout.activity_user_protocol);
         setStatusBarColor(UserProtocol.this);
 
-        ImageView goback=findViewById(R.id.goback);
+        LinearLayout goback=findViewById(R.id.goback);
         goback.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

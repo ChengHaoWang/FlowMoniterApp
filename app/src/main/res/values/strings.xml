@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Test</string>
+    <string name="app_name">流量管家</string>
     <string name="phone_icon">Phone</string>
     <string name="user_protocol">尊敬的用户：\n\t\t\t请您注册前阅读以下条款。\n\t\t\t好了，我也不知道条款应该怎么写，注册去吧。哦不，等一下，让我证明下开头空了两个字。</string>
     <string name="user_protocol_title">服务条款</string>
@@ -33,7 +33,7 @@
     <string name="all_time">时长：</string>
     <string name="description">说明：</string>
     <string name="speed">速度：</string>
-    <string name="edit_info">编辑信息</string>
+    <string name="edit_info_title">编辑信息</string>
     <string name="user_name">用户名</string>
     <string name="head_image">头像</string>
     <string name="sign">签名</string>
@@ -53,4 +53,7 @@
     <string name="forgetpassword">/PhoneInfo/user/findpasswd</string>
     <string name="editinfo">/PhoneInfo/user/modifyUser</string>
     <string name="queryinfo">/PhoneInfo/user/queryUser</string>
+    <string name="editpassword">/PhoneInfo/user/modifyPasswd</string>
+    <string name="testpic">/PhoneInfo/head/f1.png</string>
+    <string name="addappinfo">/PhoneInfo/appinfo/addAppinfo</string>
 </resources>

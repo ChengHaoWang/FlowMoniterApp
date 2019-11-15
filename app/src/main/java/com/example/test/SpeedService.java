@@ -53,15 +53,15 @@ public class SpeedService extends Service {
     private Handler mHandler=new Handler();//初始化很重要哦
 
     //几秒刷新一次
-    private final int count = 30;
+    private final int count = 10;
     //private Intent intent=new Intent(this, DashboardFragment.class);
 
     private static List<AppItem> speedItemArrayList=new ArrayList<AppItem>();
     private List<AppItem> tempList=new ArrayList<AppItem>();
     //private ExecutorService fixedThreadPool = Executors.newScheduledThreadPool(20);
-    private ThreadPoolExecutor poolExecutor = new ThreadPoolExecutor(10, 20,1,TimeUnit.SECONDS, new LinkedBlockingDeque<Runnable>(256));
+    private ThreadPoolExecutor poolExecutor = new ThreadPoolExecutor(30, Integer.MAX_VALUE,1,TimeUnit.SECONDS, new LinkedBlockingDeque<Runnable>());
     //private int index=0;
-
+    private static ThreadLocal<AppItem> threadLocalst=new ThreadLocal<AppItem>();
     /**
      * 定义线程周期性地获取网速
      */
@@ -78,12 +78,16 @@ public class SpeedService extends Service {
                 Runnable threadsRunnable=new Runnable() {
                     @Override
                     public void run() {
+                        //数据隔离
+                        AppItem tappItem=speedItemArrayList.get(index);
+                        threadLocalst.set(tappItem);
+                        AppItem appItem=threadLocalst.get();
 
-                        int appId = speedItemArrayList.get(index).getAppId();
-                        long totalFlow = speedItemArrayList.get(index).getTotalFlowLong();
+                        int appId = appItem.getAppId();
+                        long totalFlow = appItem.getTotalFlowLong();
                         //long firstInstallTime = speedItemArrayList.get(index).getFirstInstallTime();
-                        long startTime=speedItemArrayList.get(index).getStartTime();
-                        long endTime=speedItemArrayList.get(index).getEndTime();
+                        long startTime=appItem.getStartTime();
+
                         //计算现在的流量
                         TelephonyManager tm = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
                         if (checkSelfPermission(Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
@@ -93,35 +97,7 @@ public class SpeedService extends Service {
                         NetworkStatsManager networkStatsManager = (NetworkStatsManager) getSystemService(NETWORK_STATS_SERVICE);
                         SimpleDateFormat dateformat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                         String dateStr = dateformat.format(System.currentTimeMillis());
-                        /*
-                        //移动流量
-                        NetworkStats mobileFlowDetails= networkStatsManager.queryDetailsForUid(ConnectivityManager.TYPE_MOBILE, subId,firstInstallTime , System.currentTimeMillis(),appId);
-                        NetworkStats.Bucket mobileFlowBucket = new NetworkStats.Bucket();
-                        long mobileTrafficeByte=0;//发送字节总数
-                        long mobileReceiveByte=0;//接收字节总数
-                        long mobileTotalByte=0;//总字节数
-                        do {
-                            mobileFlowDetails.getNextBucket(mobileFlowBucket);
-                            mobileTrafficeByte= mobileTrafficeByte + mobileFlowBucket.getTxBytes();//接收的字节数
-                            mobileReceiveByte= mobileReceiveByte + mobileFlowBucket.getRxBytes();//传输的字节数
-                            mobileTotalByte = mobileTotalByte+mobileTrafficeByte+mobileReceiveByte;
-                        } while (mobileFlowDetails.hasNextBucket());
-
-                        //网络流量
-                        NetworkStats wifiFlowDetails= networkStatsManager.queryDetailsForUid(ConnectivityManager.TYPE_WIFI, subId,firstInstallTime, System.currentTimeMillis(),appId);
-                        NetworkStats.Bucket wifiFlowBucket = new NetworkStats.Bucket();
-                        long wifiTrafficeByte=0;//发送字节总数
-                        long wifiReceiveByte=0;//接收字节总数
-                        long wifiTotalByte=0;//总字节数
-                        do {
-                            wifiFlowDetails.getNextBucket(wifiFlowBucket);
-
-                            wifiTrafficeByte= wifiTrafficeByte + wifiFlowBucket.getTxBytes();//接收的字节数
-                            wifiReceiveByte= wifiReceiveByte + wifiFlowBucket.getRxBytes();//传输的字节数
-                            wifiTotalByte = wifiTotalByte+ wifiTrafficeByte+ wifiReceiveByte;
-                        } while (wifiFlowDetails.hasNextBucket());
-*/
-                        //获取方法二，md这个APP好麻烦
+                        //获取方法二，这个APP好麻烦==
                         NetworkStats mobileFlowSummary = null;
                         try {
                             mobileFlowSummary = networkStatsManager.querySummary(ConnectivityManager.TYPE_MOBILE, subId, startTime, System.currentTimeMillis());
@@ -161,41 +137,142 @@ public class SpeedService extends Service {
                         } while (wifiFlowSummary.hasNextBucket());
 
                         long totalFlowNow = mobileTotalByte + wifiTotalByte;
-                        long intervalFlow = totalFlowNow - totalFlow;
-                        speedItemArrayList.get(index).setTotalFlowLong(totalFlowNow);
-
-                        Log.e("序号:", String.valueOf(index) + ",名称：" + speedItemArrayList.get(index).getAppName() + ",详情：" + String.valueOf(totalFlowNow) + "." + String.valueOf(totalFlow) + "差：" + String.valueOf(intervalFlow));
+                        appItem.setTotalFlowLong(totalFlowNow);
                         //网速
                         //时间差转int
+                        long endTime=appItem.getEndTime();
                         int timeDifference=new Long(System.currentTimeMillis()-endTime).intValue()/1000;
-                        int unconvertedSpeed=new Long(intervalFlow).intValue()/timeDifference;
-                        speedItemArrayList.get(index).setUnconvertedSpeed(unconvertedSpeed);
+                        long intervalFlow = totalFlowNow - totalFlow;
+                        if (intervalFlow>0&&timeDifference>0){
+                            int unconvertedSpeed=new Long(intervalFlow).intValue()/timeDifference;
+                            appItem.setUnconvertedSpeed(unconvertedSpeed);
+                            Log.e( "名称：" ,appItem.getAppName() + ",详情：" + String.valueOf(totalFlowNow) + "." + String.valueOf(totalFlow) + "差：" + String.valueOf(intervalFlow));
+
+                            if (intervalFlow > 0 && intervalFlow < (1024 * timeDifference)) {
+                                double speed = intervalFlow / timeDifference;
+                                appItem.setAppSpeed(speed);
+                                appItem.setSpeedUnit("B/s");
+                                //Log.e("序号:", String.valueOf(index) + ",名称：" + speedItemArrayList.get(index).getAppName() + ",速度：" + String.valueOf(speed)+",时间差：" + String.valueOf(timeDifference));
+                            } else if (intervalFlow >= (1024 * timeDifference) && intervalFlow < (1024 * 1024 * timeDifference)) {
+                                double speed = intervalFlow / 1024 / timeDifference;
+                                appItem.setAppSpeed(speed);
+                                appItem.setSpeedUnit("K/s");
+                                //Log.e("序号:", String.valueOf(index) + ",名称：" + speedItemArrayList.get(index).getAppName() + ",速度：" + String.valueOf(speed)+",时间差：" + String.valueOf(timeDifference));
+                            } else if (intervalFlow >= (1024 * 1024 * timeDifference) && intervalFlow < (1024 * 1024 * 1024 * timeDifference)) {
+                                double speed = intervalFlow / 1024 / 1024 / timeDifference;
+                                appItem.setAppSpeed(speed);
+                                appItem.setSpeedUnit("M/s");
+                            } else {
+                                double speed = intervalFlow / 1024 / 1024 / 1024 / timeDifference;
+                                appItem.setAppSpeed(speed);
+                                appItem.setSpeedUnit("G/s");
+                            }
+                        }
+
+                        if (intervalFlow < 0 || intervalFlow == 0) {
+                            appItem.setUnconvertedSpeed(0);
+                            appItem.setAppSpeed(0.0);
+                            appItem.setSpeedUnit("B/s");
+                            //Log.e("序号:", String.valueOf(index) + ",名称：" + speedItemArrayList.get(index).getAppName() +",时间差：" + String.valueOf(timeDifference));
+                        }
+                        appItem.setEndTime(System.currentTimeMillis());
+                        //SystemClock.sleep(1000);
+
+/*
+                        int appId = speedItemArrayList.get(index).getAppId();
+                        long totalFlow = speedItemArrayList.get(index).getTotalFlowLong();
+                        //long firstInstallTime = speedItemArrayList.get(index).getFirstInstallTime();
+                        long startTime=speedItemArrayList.get(index).getStartTime();
+
+                        //计算现在的流量
+                        TelephonyManager tm = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
+                        if (checkSelfPermission(Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+                            Log.e("Steven", "没有权限");
+                        }
+                        String subId = tm.getSubscriberId();//网络接口ID
+                        NetworkStatsManager networkStatsManager = (NetworkStatsManager) getSystemService(NETWORK_STATS_SERVICE);
+                        SimpleDateFormat dateformat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                        String dateStr = dateformat.format(System.currentTimeMillis());
+                        //获取方法二，这个APP好麻烦==
+                        NetworkStats mobileFlowSummary = null;
+                        try {
+                            mobileFlowSummary = networkStatsManager.querySummary(ConnectivityManager.TYPE_MOBILE, subId, startTime, System.currentTimeMillis());
+                        } catch (RemoteException e) {
+                            e.printStackTrace();
+                        }
+                        NetworkStats.Bucket mobileFlowBucket = new NetworkStats.Bucket();
+                        long mobileTrafficeByte = 0;//发送字节总数
+                        long mobileReceiveByte = 0;//接收字节总数
+                        long mobileTotalByte = 0;//总字节数
+                        do {
+                            mobileFlowSummary.getNextBucket(mobileFlowBucket);
+                            if (appId == mobileFlowBucket.getUid()) {
+                                mobileTrafficeByte = mobileTrafficeByte + mobileFlowBucket.getTxBytes();//接收的字节数
+                                mobileReceiveByte = mobileReceiveByte + mobileFlowBucket.getRxBytes();//传输的字节数
+                                mobileTotalByte = mobileTotalByte + mobileTrafficeByte + mobileReceiveByte;
+                            }
+                        } while (mobileFlowSummary.hasNextBucket());
+
+                        NetworkStats wifiFlowSummary = null;
+                        try {
+                            wifiFlowSummary = networkStatsManager.querySummary(ConnectivityManager.TYPE_WIFI, subId, startTime, System.currentTimeMillis());
+                        } catch (RemoteException e) {
+                            e.printStackTrace();
+                        }
+                        NetworkStats.Bucket wifiFlowBucket = new NetworkStats.Bucket();
+                        long wifiTrafficeByte = 0;//发送字节总数
+                        long wifiReceiveByte = 0;//接收字节总数
+                        long wifiTotalByte = 0;//总字节数
+                        do {
+                            wifiFlowSummary.getNextBucket(wifiFlowBucket);
+                            if (appId == wifiFlowBucket.getUid()) {
+                                wifiTrafficeByte = wifiTrafficeByte + wifiFlowBucket.getTxBytes();//接收的字节数
+                                wifiReceiveByte = wifiReceiveByte + wifiFlowBucket.getRxBytes();//传输的字节数
+                                wifiTotalByte = wifiTotalByte + wifiTrafficeByte + wifiReceiveByte;
+                            }
+                        } while (wifiFlowSummary.hasNextBucket());
+
+                        long totalFlowNow = mobileTotalByte + wifiTotalByte;
+                        speedItemArrayList.get(index).setTotalFlowLong(totalFlowNow);
+                        //网速
+                        //时间差转int
+                        long endTime=speedItemArrayList.get(index).getEndTime();
+                        int timeDifference=new Long(System.currentTimeMillis()-endTime).intValue()/1000;
+                        long intervalFlow = totalFlowNow - totalFlow;
+                        if (intervalFlow>0&&timeDifference>0){
+                            int unconvertedSpeed=new Long(intervalFlow).intValue()/timeDifference;
+                            speedItemArrayList.get(index).setUnconvertedSpeed(unconvertedSpeed);
+                            Log.e("序号:", String.valueOf(index) + ",名称：" + speedItemArrayList.get(index).getAppName() + ",详情：" + String.valueOf(totalFlowNow) + "." + String.valueOf(totalFlow) + "差：" + String.valueOf(intervalFlow));
+
+                            if (intervalFlow > 0 && intervalFlow < (1024 * timeDifference)) {
+                                double speed = intervalFlow / timeDifference;
+                                speedItemArrayList.get(index).setAppSpeed(speed);
+                                speedItemArrayList.get(index).setSpeedUnit("B/s");
+                                //Log.e("序号:", String.valueOf(index) + ",名称：" + speedItemArrayList.get(index).getAppName() + ",速度：" + String.valueOf(speed)+",时间差：" + String.valueOf(timeDifference));
+                            } else if (intervalFlow >= (1024 * timeDifference) && intervalFlow < (1024 * 1024 * timeDifference)) {
+                                double speed = intervalFlow / 1024 / timeDifference;
+                                speedItemArrayList.get(index).setAppSpeed(speed);
+                                speedItemArrayList.get(index).setSpeedUnit("K/s");
+                                //Log.e("序号:", String.valueOf(index) + ",名称：" + speedItemArrayList.get(index).getAppName() + ",速度：" + String.valueOf(speed)+",时间差：" + String.valueOf(timeDifference));
+                            } else if (intervalFlow >= (1024 * 1024 * timeDifference) && intervalFlow < (1024 * 1024 * 1024 * timeDifference)) {
+                                double speed = intervalFlow / 1024 / 1024 / timeDifference;
+                                speedItemArrayList.get(index).setAppSpeed(speed);
+                                speedItemArrayList.get(index).setSpeedUnit("M/s");
+                            } else {
+                                double speed = intervalFlow / 1024 / 1024 / 1024 / timeDifference;
+                                speedItemArrayList.get(index).setAppSpeed(speed);
+                                speedItemArrayList.get(index).setSpeedUnit("G/s");
+                            }
+                        }
 
                         if (intervalFlow < 0 || intervalFlow == 0) {
                             speedItemArrayList.get(index).setAppSpeed(0.0);
                             speedItemArrayList.get(index).setSpeedUnit("B/s");
                             //Log.e("序号:", String.valueOf(index) + ",名称：" + speedItemArrayList.get(index).getAppName() +",时间差：" + String.valueOf(timeDifference));
-                        } else if (intervalFlow > 0 && intervalFlow < (1024 * timeDifference)) {
-                            double speed = intervalFlow / timeDifference;
-                            speedItemArrayList.get(index).setAppSpeed(speed);
-                            speedItemArrayList.get(index).setSpeedUnit("B/s");
-                            //Log.e("序号:", String.valueOf(index) + ",名称：" + speedItemArrayList.get(index).getAppName() + ",速度：" + String.valueOf(speed)+",时间差：" + String.valueOf(timeDifference));
-                        } else if (intervalFlow >= (1024 * timeDifference) && intervalFlow < (1024 * 1024 * timeDifference)) {
-                            double speed = intervalFlow / 1024 / timeDifference;
-                            speedItemArrayList.get(index).setAppSpeed(speed);
-                            speedItemArrayList.get(index).setSpeedUnit("K/s");
-                            //Log.e("序号:", String.valueOf(index) + ",名称：" + speedItemArrayList.get(index).getAppName() + ",速度：" + String.valueOf(speed)+",时间差：" + String.valueOf(timeDifference));
-                        } else if (intervalFlow >= (1024 * 1024 * timeDifference) && intervalFlow < (1024 * 1024 * 1024 * timeDifference)) {
-                            double speed = intervalFlow / 1024 / 1024 / timeDifference;
-                            speedItemArrayList.get(index).setAppSpeed(speed);
-                            speedItemArrayList.get(index).setSpeedUnit("M/s");
-                        } else {
-                            double speed = intervalFlow / 1024 / 1024 / 1024 / timeDifference;
-                            speedItemArrayList.get(index).setAppSpeed(speed);
-                            speedItemArrayList.get(index).setSpeedUnit("G/s");
                         }
                         speedItemArrayList.get(index).setEndTime(System.currentTimeMillis());
-                        SystemClock.sleep(1000);
+                        //SystemClock.sleep(1000);
+                        */
                     }
 
                 };
