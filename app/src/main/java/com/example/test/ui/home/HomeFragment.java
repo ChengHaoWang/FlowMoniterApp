@@ -1,15 +1,22 @@
 package com.example.test.ui.home;
 
+import android.Manifest;
 import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.app.usage.NetworkStats;
+import android.app.usage.NetworkStatsManager;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.RemoteException;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -30,10 +37,13 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProviders;
 
 import com.bumptech.glide.Glide;
+import com.example.test.ApkTool;
 import com.example.test.AppItem;
 import com.example.test.Appinfo;
 import com.example.test.BottomNavigation;
 import com.example.test.MainActivity;
+import com.example.test.PhoneFlowItem;
+import com.example.test.PhoneSpeedItem;
 import com.example.test.R;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -60,6 +70,9 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
+import static android.content.Context.NETWORK_STATS_SERVICE;
+import static android.content.Context.TELEPHONY_SERVICE;
+import static androidx.core.content.ContextCompat.getSystemService;
 import static com.example.test.ApkTool.scanLocalInstallAppInfoList;
 import static com.example.test.BottomNavigation.homePopWindow;
 
@@ -76,27 +89,153 @@ public class HomeFragment extends Fragment {
     private int timeFlag=0;//0=month;1=week;2=day
     final long firstdayOfmonth =getTimesMonthMorning();
     final long firstdayOfweek=getTimesWeekmorning();
-    final long fisttimeOfday=getTimesmorning();
+    final long firsttimeOfday=getTimesmorning();
     private ImageView menu;
     private WaveSwipeRefreshLayout refreshLayout;
     private ListView applistview;
     private ProgressDialog progressDialog;
     private SharedPreferences sp;
     private String username;
+    private Handler mHandler = new Handler();//初始化很重要哦
+    private final int flowcount = 10;
+    private final int speedcount = 10;
+    private PhoneFlowItem phoneFlowItem=new PhoneFlowItem();
+    private PhoneSpeedItem phoneSpeedItem=new PhoneSpeedItem();
+    private String mac;
     //protected WeakReference<View> mRootView;//缓存view
-    //为弹出窗口实现监听类
-    /*
-    private View.OnClickListener itemsOnClick = new View.OnClickListener() {
 
-        public void onClick(View v) {
-            mPopwindow.dismiss();
-            switch (v.getId()) {
-
+    private Runnable flowrunnable=new Runnable() {
+        @RequiresApi(api = Build.VERSION_CODES.M)
+        @Override
+        public void run() {
+            long phoneDayTotalFlowLong=getPhoneAllBytes(firsttimeOfday);//每日
+            long phoneWeekTotalFlowLong=getPhoneAllBytes(firstdayOfweek);//每周
+            long phoneMonthTotalFlowLong=getPhoneAllBytes(firstdayOfmonth);//每月
+            phoneFlowItem.setPhoneDayTotalFlowLong(phoneDayTotalFlowLong);
+            phoneFlowItem.setPhoneWeekTotalFlowLong(phoneWeekTotalFlowLong);
+            phoneFlowItem.setPhoneMonthTotalFlowLong(phoneMonthTotalFlowLong);
+            if (phoneDayTotalFlowLong>0){
+                phoneFlowItem.setPhoneDayTotalFlowString(ApkTool.getFlowFromByte(phoneDayTotalFlowLong));
             }
-        }
+            if (phoneWeekTotalFlowLong>0){
+                phoneFlowItem.setPhoneWeekTotalFlowString(ApkTool.getFlowFromByte(phoneWeekTotalFlowLong));
+            }
+            if (phoneMonthTotalFlowLong>0){
+                phoneFlowItem.setPhoneMonthTotalFlowString(ApkTool.getFlowFromByte(phoneMonthTotalFlowLong));
+            }
+            //网络请求
+            if (!username.equals("")&&!mac.equals("")){
+                RequestBody requestBody = new FormBody.Builder()
+                        .add("username",username)
+                        .add("macaddress",mac)
+                        .add("phonedaytotalflow",phoneFlowItem.getPhoneDayTotalFlowString())
+                        .add("phoneweektotalflow",phoneFlowItem.getPhoneWeekTotalFlowString())
+                        .add("phonemonthtotalflow",phoneFlowItem.getPhoneMonthTotalFlowString())
+                        .build();
 
+                String url = getResources().getString(R.string.ip)+getResources().getString(R.string.phoneflow);
+                OkHttpClient okHttpClient = new OkHttpClient();
+                final Request request = new Request.Builder()
+                        .url(url)
+                        .post(requestBody)
+                        .build();
+                Call call = okHttpClient.newCall(request);
+                call.enqueue(new Callback() {
+                    @Override
+                    public void onFailure(Call call, IOException e) {
+                        Log.e("网络请求","请求失败");
+                    }
+                    @Override
+                    public void onResponse(Call call, Response response) throws IOException {
+                        String respose_text = response.body().string();
+                        JSONObject jsonObject = null;
+                        try {
+                            jsonObject=new JSONObject(respose_text);
+                            String result = jsonObject.optString("result", null);
+
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
+            }
+            mHandler.postDelayed(flowrunnable, flowcount * 1000);
+        }
     };
-     */
+    private Runnable speedrunnable=new Runnable() {
+        @RequiresApi(api = Build.VERSION_CODES.M)
+        @Override
+        public void run() {
+            long phoneMonthTotalFlowLong=getPhoneAllBytes(firstdayOfmonth);//每月
+            if (phoneSpeedItem.getEndTime()==0||phoneSpeedItem.getPhoneMonthTotalFlowLong()==0){
+                phoneSpeedItem.setEndTime(System.currentTimeMillis());
+                phoneSpeedItem.setPhoneMonthTotalFlowLong(phoneMonthTotalFlowLong);
+            }else {
+                long intervalFlow=phoneMonthTotalFlowLong-phoneSpeedItem.getPhoneMonthTotalFlowLong();
+                int timeDifference = new Long(System.currentTimeMillis() - phoneSpeedItem.getEndTime()).intValue() / 1000;
+                phoneSpeedItem.setEndTime(System.currentTimeMillis());
+                if (intervalFlow > 0 && timeDifference > 0) {
+                    if (intervalFlow > 0 && intervalFlow < (1024 * timeDifference)) {
+                        double speed = intervalFlow / timeDifference;
+                        phoneSpeedItem.setPhoneSpeed(speed);
+                        phoneSpeedItem.setSpeedUnit("B/s");
+                    } else if (intervalFlow >= (1024 * timeDifference) && intervalFlow < (1024 * 1024 * timeDifference)) {
+                        double speed = intervalFlow / 1024 / timeDifference;
+                        phoneSpeedItem.setPhoneSpeed(speed);
+                        phoneSpeedItem.setSpeedUnit("K/s");
+                    } else if (intervalFlow >= (1024 * 1024 * timeDifference) && intervalFlow < (1024 * 1024 * 1024 * timeDifference)) {
+                        double speed = intervalFlow / 1024 / 1024 / timeDifference;
+                        phoneSpeedItem.setPhoneSpeed(speed);
+                        phoneSpeedItem.setSpeedUnit("M/s");
+                    } else {
+                        double speed = intervalFlow / 1024 / 1024 / 1024 / timeDifference;
+                        phoneSpeedItem.setPhoneSpeed(speed);
+                        phoneSpeedItem.setSpeedUnit("G/s");
+                    }
+                }
+
+                if (intervalFlow < 0 || intervalFlow == 0) {
+                    phoneSpeedItem.setPhoneSpeed(0.0);
+                    phoneSpeedItem.setSpeedUnit("B/s");
+                }
+            }
+            //网络请求
+            if (!username.equals("")&&!mac.equals("")){
+                RequestBody requestBody = new FormBody.Builder()
+                        .add("username",username)
+                        .add("macaddress",mac)
+                        .add("phonespeed",String.valueOf(phoneSpeedItem.getPhoneSpeed())+phoneSpeedItem.getSpeedUnit())
+                        .build();
+
+                String url = getResources().getString(R.string.ip)+getResources().getString(R.string.phonespeed);
+                OkHttpClient okHttpClient = new OkHttpClient();
+                final Request request = new Request.Builder()
+                        .url(url)
+                        .post(requestBody)
+                        .build();
+                Call call = okHttpClient.newCall(request);
+                call.enqueue(new Callback() {
+                    @Override
+                    public void onFailure(Call call, IOException e) {
+                        Log.e("网络请求","请求失败");
+                    }
+                    @Override
+                    public void onResponse(Call call, Response response) throws IOException {
+                        String respose_text = response.body().string();
+                        JSONObject jsonObject = null;
+                        try {
+                            jsonObject=new JSONObject(respose_text);
+                            String result = jsonObject.optString("result", null);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
+            }
+
+            mHandler.postDelayed(speedrunnable, speedcount * 1000);
+        }
+    };
     private View.OnClickListener menuOnclick=new View.OnClickListener(){
         @Override
         public void onClick(View view) {
@@ -175,6 +314,32 @@ public class HomeFragment extends Fragment {
         }
         return null;
     }
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    public long getPhoneAllBytes(long startTime) {
+        NetworkStats.Bucket wifibucket;
+        NetworkStats.Bucket mobilebucket;
+        TelephonyManager tm = (TelephonyManager) getActivity().getSystemService(TELEPHONY_SERVICE);
+        try {
+            NetworkStatsManager networkStatsManager = (NetworkStatsManager) getActivity().getSystemService(NETWORK_STATS_SERVICE);
+            wifibucket = networkStatsManager.querySummaryForDevice(ConnectivityManager.TYPE_WIFI,
+                    "",
+                    startTime,
+                    System.currentTimeMillis());
+
+            if (getActivity().checkSelfPermission(Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+
+            }
+            mobilebucket = networkStatsManager.querySummaryForDevice(ConnectivityManager.TYPE_MOBILE,
+                    tm.getSubscriberId(),
+                    startTime,
+                    System.currentTimeMillis());
+        } catch (RemoteException e) {
+            return -1;
+        }
+        long phoneTotalFlow=wifibucket.getRxBytes()+wifibucket.getTxBytes()+mobilebucket.getRxBytes()+mobilebucket.getTxBytes();
+        //这里可以区分发送和接收
+        return phoneTotalFlow;
+    }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -182,23 +347,16 @@ public class HomeFragment extends Fragment {
         homeViewModel =
                 ViewModelProviders.of(this).get(HomeViewModel.class);
         final View root = inflater.inflate(R.layout.fragment_home, container, false);
-        /*
-        final TextView textView = root.findViewById(R.id.text_home);
-
-        homeViewModel.getText().observe(this, new Observer<String>() {
-            @Override
-            public void onChanged(@Nullable String s) {
-                textView.setText(s);
-            }
-        });
-*/
-        //Date a=getTimesmorning2();
         //设置走马灯被选中
         final TextView rolltext=root.findViewById(R.id.rolltext);
         rolltext.setSelected(true);
 
         sp = getActivity().getSharedPreferences("userInfo", 0);
         username=sp.getString("username", "");
+        mac=BottomNavigation.getNewMac();
+        //启动计时器
+        mHandler.postDelayed(flowrunnable, 0);
+        mHandler.postDelayed(speedrunnable, 0);
 
         new Thread(new Runnable() {
             @Override
@@ -230,14 +388,14 @@ public class HomeFragment extends Fragment {
                             //String result1 = jsonObject1.optString("result", null);
                             jsonObject=new JSONObject(respose_text);
                             final String iannouncement=jsonObject.optString("announcement",null);
+                            if (!iannouncement.equals("")){
                             new Handler(Looper.getMainLooper()).post(new Runnable() {
                                 @Override
                                 public void run() {
-                                if (!iannouncement.equals("")){
                                     rolltext.setText(iannouncement);
                                 }
-                                }
                             });
+                            }
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
@@ -301,20 +459,6 @@ public class HomeFragment extends Fragment {
         startTime=firstdayOfmonth;
         menu=getActivity().findViewById(R.id.menu);
 
-        //右上角菜单
-        /*
-        final TextView title=getActivity().findViewById(R.id.title);
-        if (title.getText().equals("流量")){
-            menu.setOnClickListener(menuOnclick);
-            menu.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-
-                }
-            });
-        }
-       */
-
         homePopWindow.setOnDismissListener(new PopupWindow.OnDismissListener() {
             @RequiresApi(api = Build.VERSION_CODES.M)
             @Override
@@ -343,7 +487,7 @@ public class HomeFragment extends Fragment {
                                     tempAppList.addAll(appList);
                                 }
                                 else {
-                                    startTime=fisttimeOfday;
+                                    startTime=firsttimeOfday;
                                     new Handler(Looper.getMainLooper()).post(new Runnable() {
                                         @Override
                                         public void run() {
@@ -400,7 +544,7 @@ public class HomeFragment extends Fragment {
                                     tempAppList.addAll(appList);
                                 }
                                 else {
-                                    startTime=fisttimeOfday;
+                                    startTime=firsttimeOfday;
                                     new Handler(Looper.getMainLooper()).post(new Runnable() {
                                         @Override
                                         public void run() {

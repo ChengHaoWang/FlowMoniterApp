@@ -23,6 +23,8 @@ import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import com.example.test.ui.home.HomeFragment;
+
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -78,13 +80,13 @@ public class ApkTool {
         String b=timeStamp2Date(System.currentTimeMillis(),null);
         try {
             myAppInfos.clear();
-            Calendar beginCal = Calendar.getInstance();
-            beginCal.add(Calendar.YEAR, -3);
-            Calendar endCal = Calendar.getInstance();
+            //Calendar beginCal = Calendar.getInstance();
+            //beginCal.add(Calendar.DAY_OF_WEEK, -3);
+            //Calendar endCal = Calendar.getInstance();
             UsageStatsManager manager=(UsageStatsManager)context.getSystemService(USAGE_STATS_SERVICE);
-            String str = String.format("%tF %<tT", beginCal.getTimeInMillis());
-            String str1 = String.format("%tF %<tT", endCal.getTimeInMillis());
-            stats=manager.queryUsageStats(UsageStatsManager.INTERVAL_DAILY,beginCal.getTimeInMillis(),endCal.getTimeInMillis());
+            //String str = String.format("%tF %<tT", beginCal.getTimeInMillis());
+            //String str1 = String.format("%tF %<tT", endCal.getTimeInMillis());
+            stats=manager.queryUsageStats(UsageStatsManager.INTERVAL_BEST, starttime,System.currentTimeMillis());
             StringBuilder sb=new StringBuilder();
 
             //获取应用相关信息
@@ -123,33 +125,7 @@ public class ApkTool {
                         }
                         String subId = tm.getSubscriberId();//网络接口ID
                         NetworkStatsManager networkStatsManager = (NetworkStatsManager) context.getSystemService(NETWORK_STATS_SERVICE);
-                /*
-                //移动流量
-                NetworkStats mobileFlowDetails= networkStatsManager.queryDetailsForUid(ConnectivityManager.TYPE_MOBILE, subId,firstInstallTime , System.currentTimeMillis(),uid);
-                NetworkStats.Bucket mobileFlowBucket = new NetworkStats.Bucket();
-                long mobileTrafficeByte=0;//发送字节总数
-                long mobileReceiveByte=0;//接收字节总数
-                long mobileTotalByte=0;//总字节数
-                do {
-                    mobileFlowDetails.getNextBucket(mobileFlowBucket);
-                    mobileTrafficeByte= mobileTrafficeByte + mobileFlowBucket.getTxBytes();//接收的字节数
-                    mobileReceiveByte= mobileReceiveByte + mobileFlowBucket.getRxBytes();//传输的字节数
-                    mobileTotalByte = mobileTotalByte+mobileTrafficeByte+mobileReceiveByte;
-                } while (mobileFlowDetails.hasNextBucket());
 
-                //网络流量
-                NetworkStats wifiFlowDetails= networkStatsManager.queryDetailsForUid(ConnectivityManager.TYPE_WIFI, subId,firstInstallTime , System.currentTimeMillis(),uid);
-                NetworkStats.Bucket wifiFlowBucket = new NetworkStats.Bucket();
-                long wifiTrafficeByte=0;//发送字节总数
-                long wifiReceiveByte=0;//接收字节总数
-                long wifiTotalByte=0;//总字节数
-                do {
-                    wifiFlowDetails.getNextBucket(wifiFlowBucket);
-                    wifiTrafficeByte= wifiTrafficeByte + wifiFlowBucket.getTxBytes();//接收的字节数
-                    wifiReceiveByte= wifiReceiveByte + wifiFlowBucket.getRxBytes();//传输的字节数
-                    wifiTotalByte = wifiTotalByte+ wifiTrafficeByte+ wifiReceiveByte;
-                } while (wifiFlowDetails.hasNextBucket());
-*/
                         //获取方法二，md这个APP好麻烦
                         NetworkStats mobileFlowSummary= null;
                         try {
@@ -206,30 +182,31 @@ public class ApkTool {
                         AppItem tappItem=new AppItem();
                         threadLocalst.set(tappItem);
                         AppItem mappItem=threadLocalst.get();
-                        //为item赋值
-                        mappItem.setAppName(applicationName);
-                        mappItem.setAppPackageName(packageName);
-                        mappItem.setAppId(uid);
-                        mappItem.setTotalFlowString(getFlowFromByte(totalByte));
-                        mappItem.setTotalTime(runTime);
-                        packageInfo=packageInfos.get(index);
-                        Drawable icon=packageInfo.applicationInfo.loadIcon(packageManager);
-                        if (icon == null) {
-                            mappItem.setAppIcon(context.getResources().getDrawable(R.mipmap.ic_launcher));
+                        synchronized (this){
+                            //为item赋值
+                            mappItem.setAppName(applicationName);
+                            mappItem.setAppPackageName(packageName);
+                            mappItem.setAppId(uid);
+                            mappItem.setTotalFlowString(getFlowFromByte(totalByte));
+                            mappItem.setTotalTime(runTime);
+                            packageInfo=packageInfos.get(index);
+                            Drawable icon=packageInfo.applicationInfo.loadIcon(packageManager);
+                            if (icon == null) {
+                                mappItem.setAppIcon(context.getResources().getDrawable(R.mipmap.ic_launcher));
+                            }
+                            //Log.e("图片", String.valueOf(icon));
+                            mappItem.setAppIcon(icon);
+                            mappItem.setTotalFlowLong(totalByte);
+                            mappItem.setAppSpeed(0.0);
+                            mappItem.setSpeedUnit("B/s");
+                            mappItem.setFirstInstallTime(firstInstallTime);
+                            //mappItem.setTimeflag(timeflag);
+                            mappItem.setStartTime(starttime);
+                            long endtime=System.currentTimeMillis();
+                            mappItem.setEndTime(endtime);
+                            myAppInfos.add(mappItem);
+                            cdl.countDown();
                         }
-                        //Log.e("图片", String.valueOf(icon));
-                        mappItem.setAppIcon(icon);
-                        mappItem.setTotalFlowLong(totalByte);
-                        mappItem.setAppSpeed(0.0);
-                        mappItem.setSpeedUnit("B/s");
-                        mappItem.setFirstInstallTime(firstInstallTime);
-                        //mappItem.setTimeflag(timeflag);
-                        mappItem.setStartTime(starttime);
-                        long endtime=System.currentTimeMillis();
-                        mappItem.setEndTime(endtime);
-                        myAppInfos.add(mappItem);
-
-                        cdl.countDown();
                         //SystemClock.sleep(1000);
                             }
                         //});
@@ -237,15 +214,12 @@ public class ApkTool {
                  //   }
                 };
                 poolExecutor.execute(threadsRunnable);
-
-
             }
         } catch (Exception e) {
             Log.e("Steven", "===============获取应用包信息失败");
             Log.e("Steven", e.toString());
             e.printStackTrace();
         }
-
         try{
             cdl.await();
         }catch (InterruptedException e){
@@ -272,6 +246,7 @@ public class ApkTool {
         BigDecimal kb = new BigDecimal(Double.toString(1024));
         BigDecimal mb = new BigDecimal(Double.toString((1024*1024)));
         BigDecimal gb = new BigDecimal(Double.toString((1024*1024*1024)));
+        //BigDecimal tb = new BigDecimal(Double.toString((1024*1024*1024*1024)));
         //totalB.divide(b2, scale, BigDecimal.ROUND_HALF_UP)
 
         //float totalKb =totalByte/1024;
@@ -288,6 +263,7 @@ public class ApkTool {
         //BigDecimal gb = new BigDecimal(totalGb);
         //double totalGb2 = gb.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
         double totalGb2=totalB.divide(gb, 2, BigDecimal.ROUND_HALF_UP).doubleValue();
+        //double totalTb=totalB.divide(tb,2,BigDecimal.ROUND_HALF_UP).doubleValue();
 
         if(totalByte<0){
             return "0B";
@@ -295,18 +271,22 @@ public class ApkTool {
         if(totalByte>0&&totalByte<1024){
             return totalByte+"B";
         }
-
-        if(totalGb2<1){
-            if (totalMb1<1){
-                return totalKb1+"KB";
+        //if (totalTb<1){
+            if(totalGb2<1){
+                if (totalMb1<1){
+                    return totalKb1+"KB";
+                }
+                else {
+                    return totalMb1+"MB";
+                }
             }
             else {
-                return totalMb1+"MB";
+                return totalGb2+"GB";
             }
-        }
-        else {
-            return totalGb2+"GB";
-        }
+       // }else {
+        //    return totalTb+"TB";
+       // }
+
     }
     @RequiresApi(api = Build.VERSION_CODES.M)
     public static List<SpeedItem> getInitiSpeedList(PackageManager packageManager, Context context){

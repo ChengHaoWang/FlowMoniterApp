@@ -611,22 +611,34 @@ public class BottomNavigation extends FragmentActivity{
                                 @Override
                                 public void run() {
                                     //head_image_upload=findViewById(R.id.head_image_upload);
-                                    workspace.setText(icompany);
-                                    position.setText(iduty);
-                                    contactway.setText(iemail);
-                                    personaldes.setText(isign);
+                                    if (!icompany.equals("")){
+                                        workspace.setText(icompany);
+                                    }
+                                    if (!iduty.equals("")){
+                                        position.setText(iduty);
+                                    }
+                                    if (!iemail.equals("")){
+                                        contactway.setText(iemail);
+                                    }
+                                    if (!isign.equals("")){
+                                        personaldes.setText(isign);
+                                    }
                                     //String url1 = getResources().getString(R.string.ip)+getResources().getString(R.string.testpic);
-                                    Glide.with(BottomNavigation.this)
-                                            .load(iheadsrc)
-                                            .centerCrop()
-                                            .placeholder(R.drawable.default_head)
-                                            .into(drawerheadimage);
-                                    Glide.with(BottomNavigation.this)
-                                            .load(iheadsrc)
-                                            .centerCrop()
-                                            .placeholder(R.drawable.default_head)
-                                            .into(mainheadimage);
-                                    nickname.setText(inickname);
+                                    if (!iheadsrc.equals("")){
+                                        Glide.with(BottomNavigation.this)
+                                                .load(iheadsrc)
+                                                .centerCrop()
+                                                .placeholder(R.drawable.default_head)
+                                                .into(drawerheadimage);
+                                        Glide.with(BottomNavigation.this)
+                                                .load(iheadsrc)
+                                                .centerCrop()
+                                                .placeholder(R.drawable.default_head)
+                                                .into(mainheadimage);
+                                    }
+                                    if (!inickname.equals("")){
+                                        nickname.setText(inickname);
+                                    }
                                 }
                             });
 
@@ -659,6 +671,12 @@ public class BottomNavigation extends FragmentActivity{
         change_account.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                SharedPreferences.Editor editor =sp.edit();
+                editor.putString("username", "");
+                editor.putString("password", "");
+                editor.putString("loginstatus","false");
+                editor.putLong("starttime",0);
+                editor.commit();
                 Intent intent=new Intent(BottomNavigation.this, MainActivity.class);
                 startActivity(intent);
             }
@@ -730,7 +748,7 @@ public class BottomNavigation extends FragmentActivity{
      * 通过网络接口取mac
      * @return
      */
-    private static String getNewMac() {
+    public static String getNewMac() {
         try {
             List<NetworkInterface> all = Collections.list(NetworkInterface.getNetworkInterfaces());
             for (NetworkInterface nif : all) {

@@ -154,53 +154,56 @@
     </LinearLayout>
 
     <LinearLayout
-        android:layout_width="198dp"
+        android:layout_width="match_parent"
         android:layout_height="0dp"
         android:orientation="horizontal"
         android:layout_weight="1"
-        android:gravity="bottom">
+        android:gravity="center_horizontal">
         <TextView
-            android:layout_width="0dp"
+            android:layout_width="80dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:text="忘记密码"
             android:id="@+id/forgetpassword"
-            android:gravity="left">
+            android:gravity="left"
+            android:layout_gravity="bottom">
         </TextView>
         <ImageView
             android:layout_width="20dp"
             android:layout_height="20dp"
             android:src="@drawable/vline"
-            android:gravity="center">
+            android:gravity="center"
+            android:layout_gravity="bottom">
         </ImageView>
         <TextView
-            android:layout_width="0dp"
+            android:layout_width="80dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:text="用户注册"
             android:id="@+id/register"
-            android:gravity="right">
+            android:gravity="right"
+            android:layout_gravity="bottom">
         </TextView>
 
     </LinearLayout>
     <LinearLayout
-        android:layout_width="200dp"
+        android:layout_width="match_parent"
         android:layout_height="0dp"
         android:orientation="horizontal"
         android:layout_weight="1"
-        android:gravity="top"
+        android:gravity="center_horizontal"
         android:layout_marginTop="10dp">
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="登录即代表阅读并同意">
+            android:text="登录即代表阅读并同意"
+            android:layout_gravity="top">
         </TextView>
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="服务条款"
             android:textStyle="bold"
-            android:id="@+id/service_text">
+            android:id="@+id/service_text"
+            android:layout_gravity="top">
         </TextView>
     </LinearLayout>
 

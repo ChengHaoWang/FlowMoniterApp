@@ -21,6 +21,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.Settings;
@@ -38,6 +39,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.makeramen.roundedimageview.RoundedImageView;
 
 import org.json.JSONException;
@@ -84,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
         long starttime=sp.getLong("starttime",0);
         if (login_status.equals("true")&&System.currentTimeMillis()<(starttime+validtime*86400000)){
             Intent intent=new Intent(MainActivity.this,BottomNavigation.class);
-            //startActivity(intent);
+            startActivity(intent);
         }
 
         super.onCreate(savedInstanceState);
@@ -125,19 +127,21 @@ public class MainActivity extends AppCompatActivity {
         final EditText password=findViewById(R.id.password);
         //登录框小头像显示
         File f;
-        String root = this.getCacheDir().toString();
-        String dirName = "pic";
+        /*
+        String root = Environment.getExternalStorageDirectory().getAbsolutePath();
+        String dirName = "liuliangguanjia";
         File appDir = new File(root , dirName);
         if (!appDir.exists()) {
             appDir.mkdirs();
         }
-        f = new File(appDir, "head.jpg");
-        Log.i("图片路径", f.getPath().toString());
+         */
+        f = new File("/storage/emulated/0/liuliangguanjia/head.jpg");
+        //Log.i("图片路径", f.getPath());
         if (!name.equals("")&&!pass.equals("")){
             account.setText(name);
             password.setText(pass);
             if (f.exists()) {
-                Glide.with(this).load(f).into(headimage);
+                Glide.with(this).load(f).skipMemoryCache(true).diskCacheStrategy(DiskCacheStrategy.NONE).into(headimage);
             }
         }
 
@@ -291,15 +295,24 @@ public class MainActivity extends AppCompatActivity {
                                         try {
                                             jsonObject = new JSONObject(respose_text);
                                             String result = jsonObject.optString("result", null);
-                                            if (result.equals("success")){
-                                                SharedPreferences.Editor editor =sp.edit();
-                                                editor.putString("username", accout_text);
-                                                editor.putString("password", password_text);
-                                                editor.putString("loginstatus","true");
-                                                editor.putLong("starttime",System.currentTimeMillis());
-                                                editor.commit();
-                                                Intent intent=new Intent(MainActivity.this,BottomNavigation.class);
-                                                startActivity(intent);
+                                            if(result!=null){
+                                                if (result.equals("success")){
+                                                    SharedPreferences.Editor editor =sp.edit();
+                                                    editor.putString("username", accout_text);
+                                                    editor.putString("password", password_text);
+                                                    editor.putString("loginstatus","true");
+                                                    editor.putLong("starttime",System.currentTimeMillis());
+                                                    editor.commit();
+                                                    Intent intent=new Intent(MainActivity.this,BottomNavigation.class);
+                                                    startActivity(intent);
+                                                }else {
+                                                    new Handler(Looper.getMainLooper()).post(new Runnable() {
+                                                        @Override
+                                                        public void run() {
+                                                            Toast.makeText(MainActivity.this,"请检查用户名和密码",Toast.LENGTH_SHORT).show();
+                                                        }
+                                                    });
+                                                }
                                             }else {
                                                 new Handler(Looper.getMainLooper()).post(new Runnable() {
                                                     @Override
@@ -308,8 +321,10 @@ public class MainActivity extends AppCompatActivity {
                                                     }
                                                 });
                                             }
+
                                         } catch (JSONException e) {
                                             e.printStackTrace();
+                                            Toast.makeText(MainActivity.this,"请检查用户名和密码",Toast.LENGTH_SHORT).show();
                                         }
 
                                     }

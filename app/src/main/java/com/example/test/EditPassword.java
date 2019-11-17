@@ -37,8 +37,9 @@ public class EditPassword extends AppCompatActivity {
         goback.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent =new Intent(EditPassword.this,BottomNavigation.class);
-                startActivity(intent);
+                finish();
+                //Intent intent =new Intent(EditPassword.this,BottomNavigation.class);
+                //startActivity(intent);
             }
         });
 

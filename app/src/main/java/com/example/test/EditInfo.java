@@ -5,6 +5,7 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import android.Manifest;
 import android.content.DialogInterface;
@@ -29,6 +30,8 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.Toast;
+
+import com.bumptech.glide.Glide;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -79,6 +82,24 @@ public class EditInfo extends AppCompatActivity {
     private int picChangeOrNot=0;//判断头像是否发生变化
     private Bitmap headbitmap;
     private File f;
+
+    public static boolean deleteSingleFile(String filePath$Name) {
+        File file = new File(filePath$Name);
+        // 如果文件路径所对应的文件存在，并且是一个文件，则直接删除
+        if (file.exists() && file.isFile()) {
+            if (file.delete()) {
+                Log.e("--Method--", "Copy_Delete.deleteSingleFile: 删除单个文件" + filePath$Name + "成功！");
+                return true;
+            } else {
+                Log.e("删除单个文件" ,filePath$Name + "失败！");
+                return false;
+            }
+        } else {
+            Log.e("删除单个文件失败：", filePath$Name + "不存在！");
+            return false;
+        }
+    }
+
 
     private void checkPermision() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN // Permission was added in API Level 16
@@ -132,20 +153,29 @@ public class EditInfo extends AppCompatActivity {
     public void saveBitmap(Bitmap bmp) {
         //Log.e("保存图片", "保存图片");
         //生成路径
-        String root = this.getCacheDir().toString();
-        String dirName = "pic";
+        if (ActivityCompat.checkSelfPermission(EditInfo.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(EditInfo.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},1);
+        }
+        if (ActivityCompat.checkSelfPermission(EditInfo.this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(EditInfo.this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},1);
+        }
+        String root = Environment.getExternalStorageDirectory().getAbsolutePath();
+        String dirName = "liuliangguanjia";
         File appDir = new File(root , dirName);
         if (!appDir.exists()) {
             appDir.mkdirs();
         }
+        File[] files = appDir.listFiles();
         f = new File(appDir, "head.jpg");
-        Log.i("图片路径", f.getPath().toString());
+        Log.i("图片路径", f.getPath());
+
         if (f.exists()) {
-            f.delete();
+            deleteSingleFile(f.getPath());
+            //f.delete();
         }
         try {
             FileOutputStream out = new FileOutputStream(f);
-            bmp.compress(Bitmap.CompressFormat.PNG, 90, out);
+            bmp.compress(Bitmap.CompressFormat.JPEG, 90, out);
             out.flush();
             out.close();
             Log.i("保存图片", "已经保存");
@@ -261,6 +291,11 @@ public class EditInfo extends AppCompatActivity {
                                     company.setText(icompany);
                                     duty.setText(iduty);
                                     email.setText(iemail);
+                                    Glide.with(EditInfo.this)
+                                            .load(iheadsrc)
+                                            .centerCrop()
+                                            .placeholder(R.drawable.default_head)
+                                            .into(head_image_upload);
                                 }
                             });
 
@@ -281,7 +316,8 @@ public class EditInfo extends AppCompatActivity {
         PhotoOrCropUtil.getInstance().setPhotoOrCropListener(new PhotoOrCropUtil.PhotoOrCropListener() {
             @Override
             public void uploadAvatar(Bitmap bitmap) {
-                head_image_upload.setImageBitmap(bitmap);
+                //head_image_upload.setImageBitmap(bitmap);
+                Glide.with(EditInfo.this).load(bitmap).into(head_image_upload);
                 picChangeOrNot=1;
                 headbitmap=bitmap;
                 saveBitmap(bitmap);
@@ -294,7 +330,6 @@ public class EditInfo extends AppCompatActivity {
             }
         });
         //传输数据
-
         LinearLayout confirm_edit_info=findViewById(R.id.confirm_edit_info);
         confirm_edit_info.setOnClickListener(new View.OnClickListener() {
             @Override

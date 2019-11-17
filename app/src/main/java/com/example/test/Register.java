@@ -201,9 +201,9 @@ public class Register extends AppCompatActivity {
                                                 //dialog.show();
                                             }
                                         });
-                                        finish();
-                                        //Intent intent=new Intent(Register.this,MainActivity.class);
-                                        //startActivity(intent);
+                                        //finish();
+                                        Intent intent=new Intent(Register.this,MainActivity.class);
+                                        startActivity(intent);
                                     }
                                 });
                             }

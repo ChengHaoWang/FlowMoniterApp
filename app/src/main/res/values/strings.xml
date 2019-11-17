@@ -56,4 +56,6 @@
     <string name="editpassword">/PhoneInfo/user/modifyPasswd</string>
     <string name="testpic">/PhoneInfo/head/f1.png</string>
     <string name="addappinfo">/PhoneInfo/appinfo/addAppinfo</string>
+    <string name="phoneflow">/PhoneInfo/hardinfo/updateFlow</string>
+    <string name="phonespeed">/PhoneInfo/hardinfo/updateSpeed</string>
 </resources>
