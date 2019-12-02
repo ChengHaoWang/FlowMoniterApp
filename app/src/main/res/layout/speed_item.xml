@@ -57,6 +57,7 @@
                 android:layout_height="match_parent"
                 android:textSize="16dp"
                 android:textColor="@color/black"
+                android:gravity="center"
                 android:text="@string/description">
             </TextView>
             <TextView
@@ -64,6 +65,7 @@
                 android:layout_height="match_parent"
                 android:textSize="16dp"
                 android:textColor="@color/black"
+                android:gravity="center"
                 android:id="@+id/app_description">
             </TextView>
             <TextView
@@ -71,6 +73,7 @@
                 android:layout_height="match_parent"
                 android:textSize="16dp"
                 android:textColor="@color/black"
+                android:gravity="center"
                 android:text="@string/speed"
                 android:layout_marginLeft="5dp"
                 >
@@ -80,6 +83,7 @@
                 android:layout_height="match_parent"
                 android:textSize="16dp"
                 android:textColor="@color/black"
+                android:gravity="center"
                 android:id="@+id/app_speed">
             </TextView>
             <TextView
@@ -88,6 +92,7 @@
                 android:textSize="16dp"
                 android:textColor="@color/black"
                 android:id="@+id/speed_unit"
+                android:gravity="center"
                 android:layout_marginLeft="2dp">
             </TextView>
         </LinearLayout>

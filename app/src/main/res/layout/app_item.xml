@@ -57,6 +57,7 @@
                 android:layout_height="match_parent"
                 android:textSize="16dp"
                 android:textColor="@color/black"
+                android:gravity="center"
                 android:text="@string/flow"
                 >
             </TextView>
@@ -65,6 +66,7 @@
                 android:layout_height="match_parent"
                 android:textSize="16dp"
                 android:textColor="@color/black"
+                android:gravity="center_vertical"
                 android:id="@+id/app_flow">
             </TextView>
             <TextView
@@ -72,6 +74,7 @@
                 android:layout_height="match_parent"
                 android:textSize="16dp"
                 android:textColor="@color/black"
+                android:gravity="center"
                 android:text="@string/all_time"
                 android:layout_marginLeft="5dp"
                 >
@@ -81,6 +84,7 @@
                 android:layout_height="match_parent"
                 android:textSize="16dp"
                 android:textColor="@color/black"
+                android:gravity="center"
                 android:id="@+id/app_time">
             </TextView>
         </LinearLayout>

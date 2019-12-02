@@ -97,7 +97,7 @@ public class HomeFragment extends Fragment {
     private SharedPreferences sp;
     private String username;
     private Handler mHandler = new Handler();//初始化很重要哦
-    private final int flowcount = 10;
+    private final int flowcount = 60*10;
     private final int speedcount = 10;
     private PhoneFlowItem phoneFlowItem=new PhoneFlowItem();
     private PhoneSpeedItem phoneSpeedItem=new PhoneSpeedItem();
@@ -504,6 +504,7 @@ public class HomeFragment extends Fragment {
                                             getActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
                                         }
                                     });
+                                    timeFlag=2;
                                     transToServer();
                                 }
                                 Collections.sort(tempAppList, new Comparator<AppItem>() {
@@ -561,6 +562,7 @@ public class HomeFragment extends Fragment {
                                             getActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
                                         }
                                     });
+                                    timeFlag=2;
                                     transToServer();
                                 }
                                 Collections.sort(tempAppList, new Comparator<AppItem>() {
@@ -616,6 +618,7 @@ public class HomeFragment extends Fragment {
                                             getActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
                                         }
                                     });
+                                    timeFlag=1;
                                     transToServer();
                                 }
                                 Collections.sort(tempAppList, new Comparator<AppItem>() {
@@ -670,6 +673,7 @@ public class HomeFragment extends Fragment {
                                             getActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
                                         }
                                     });
+                                    timeFlag=1;
                                     transToServer();
                                 }
                                 Collections.sort(tempAppList, new Comparator<AppItem>() {
@@ -725,6 +729,7 @@ public class HomeFragment extends Fragment {
                                             getActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
                                         }
                                     });
+                                    timeFlag=0;
                                     transToServer();
                                 }
                                 Collections.sort(tempAppList, new Comparator<AppItem>() {
@@ -779,6 +784,7 @@ public class HomeFragment extends Fragment {
                                             getActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
                                         }
                                     });
+                                    timeFlag=0;
                                     transToServer();
                                 }
                                 Collections.sort(tempAppList, new Comparator<AppItem>() {
@@ -854,15 +860,17 @@ public class HomeFragment extends Fragment {
                         case 0:
                             for (int i=0;i<appList.size();i++){
                                 Appinfo appinfo=new Appinfo();
-                                appinfo.setAppIcon("");
+                                appinfo.setAppIcon(null);
                                 appinfo.setAppId(String.valueOf(appList.get(i).getAppId()));
                                 appinfo.setAppName(appList.get(i).getAppName());
-                                appinfo.setDescription("");
+                                appinfo.setDescription(null);
                                 appinfo.setMacaddress(getNewMac());
-                                appinfo.setMonthTotalString(appList.get(i).getTotalFlowString());
-                                appinfo.setWeekTotalFlowString("");
-                                appinfo.setDayTotalFlowString("");
-                                appinfo.setTotalTime(appList.get(i).getTotalTime());
+                                appinfo.setMonthTotalFlowString(appList.get(i).getTotalFlowString());
+                                appinfo.setWeekTotalFlowString(null);
+                                appinfo.setDayTotalFlowString(null);
+                                appinfo.setDayTotalTime(null);
+                                appinfo.setWeekTotalTime(null);
+                                appinfo.setMonthTotalTime(appList.get(i).getTotalTime());
                                 appinfo.setUsername(username);
                                 appinfoList.add(appinfo);
                             }
@@ -870,15 +878,17 @@ public class HomeFragment extends Fragment {
                         case 1:
                             for (int i=0;i<appList.size();i++){
                                 Appinfo appinfo=new Appinfo();
-                                appinfo.setAppIcon("");
+                                appinfo.setAppIcon(null);
                                 appinfo.setAppId(String.valueOf(appList.get(i).getAppId()));
                                 appinfo.setAppName(appList.get(i).getAppName());
-                                appinfo.setDescription("");
+                                appinfo.setDescription(null);
                                 appinfo.setMacaddress(getNewMac());
-                                appinfo.setMonthTotalString("");
+                                appinfo.setMonthTotalFlowString(null);
                                 appinfo.setWeekTotalFlowString(appList.get(i).getTotalFlowString());
-                                appinfo.setDayTotalFlowString("");
-                                appinfo.setTotalTime(appList.get(i).getTotalTime());
+                                appinfo.setDayTotalFlowString(null);
+                                appinfo.setDayTotalTime(null);
+                                appinfo.setWeekTotalTime(appList.get(i).getTotalTime());
+                                appinfo.setMonthTotalTime(null);
                                 appinfo.setUsername(username);
                                 appinfoList.add(appinfo);
                             }
@@ -886,15 +896,17 @@ public class HomeFragment extends Fragment {
                         case 2:
                             for (int i=0;i<appList.size();i++){
                                 Appinfo appinfo=new Appinfo();
-                                appinfo.setAppIcon("");
+                                appinfo.setAppIcon(null);
                                 appinfo.setAppId(String.valueOf(appList.get(i).getAppId()));
                                 appinfo.setAppName(appList.get(i).getAppName());
-                                appinfo.setDescription("");
+                                appinfo.setDescription(null);
                                 appinfo.setMacaddress(getNewMac());
-                                appinfo.setMonthTotalString("");
-                                appinfo.setWeekTotalFlowString("");
+                                appinfo.setMonthTotalFlowString(null);
+                                appinfo.setWeekTotalFlowString(null);
                                 appinfo.setDayTotalFlowString(appList.get(i).getTotalFlowString());
-                                appinfo.setTotalTime(appList.get(i).getTotalTime());
+                                appinfo.setDayTotalTime(appList.get(i).getTotalTime());
+                                appinfo.setWeekTotalTime(null);
+                                appinfo.setMonthTotalTime(null);
                                 appinfo.setUsername(username);
                                 appinfoList.add(appinfo);
                             }

@@ -70,6 +70,8 @@ public class EditInfo extends AppCompatActivity {
     private ImageView head_image_upload;
     private final int[] sex_id = {0};
     private String [] sex_array;
+    private EditText studentid;
+    private EditText enterschool;
     //初始变量
     private String isign="";
     private String inickname="";
@@ -78,6 +80,8 @@ public class EditInfo extends AppCompatActivity {
     private String iduty="";
     private String iemail="";
     private String iheadsrc="";
+    private String istudentid="";
+    private String ienterschool="";
 
     private int picChangeOrNot=0;//判断头像是否发生变化
     private Bitmap headbitmap;
@@ -225,6 +229,8 @@ public class EditInfo extends AppCompatActivity {
         company=findViewById(R.id.company);
         duty=findViewById(R.id.duty);
         email=findViewById(R.id.email);
+        studentid=findViewById(R.id.studentid);
+        enterschool=findViewById(R.id.enterschool);
         sex.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
@@ -276,6 +282,8 @@ public class EditInfo extends AppCompatActivity {
                             iduty=jsonObject2.optString("duty",null);
                             iemail=jsonObject2.optString("email",null);
                             iheadsrc=jsonObject2.optString("headimg",null);
+                            istudentid=jsonObject2.optString("stuid",null);
+                            ienterschool=jsonObject2.optString("stuyear",null);
 
                             new Handler(Looper.getMainLooper()).post(new Runnable() {
                                 @Override
@@ -296,6 +304,12 @@ public class EditInfo extends AppCompatActivity {
                                             .centerCrop()
                                             .placeholder(R.drawable.default_head)
                                             .into(head_image_upload);
+                                    if (!istudentid.equals("")){
+                                        studentid.setText(istudentid);
+                                    }
+                                    if (!ienterschool.equals("")){
+                                        enterschool.setText(ienterschool);
+                                    }
                                 }
                             });
 
@@ -341,29 +355,56 @@ public class EditInfo extends AppCompatActivity {
                 final String pcompany=company.getText().toString();
                 final String pduty=duty.getText().toString();
                 final String pemail=email.getText().toString();
-                if (!psign.equals(isign)||!pnickname.equals(inickname)||!psex.equals(isex)||!pcompany.equals(icompany)||!pduty.equals(iduty)||!pemail.equals(iemail)||picChangeOrNot==1){
+                final String pstudentid=studentid.getText().toString();
+                final String penterschool=enterschool.getText().toString();
+                if (!psign.equals(isign)||!pnickname.equals(inickname)||!psex.equals(isex)||!pcompany.equals(icompany)||!pduty.equals(iduty)||!pemail.equals(iemail)||picChangeOrNot==1||!pstudentid.equals(istudentid)||!penterschool.equals(ienterschool)){
 
                     new Thread(new Runnable() {
                         @Override
                         public void run() {
+                            RequestBody multipartBody;
                             MediaType type=MediaType.parse("image/jpeg");
-                            File file=new File(f.getPath());
-                            RequestBody fileBody=RequestBody.create(file,type);
+                            RequestBody fileBody = null;
+                            if(f!=null){
+                                File file=new File(f.getPath());
+                                fileBody=RequestBody.create(file,type);
+                                multipartBody = new MultipartBody.Builder()
+                                        .setType(MultipartBody.ALTERNATIVE)
+                                        .addFormDataPart("username",username)
+                                        .addFormDataPart("password","")
+                                        .addFormDataPart("question","")
+                                        .addFormDataPart("answer","")
+                                        .addFormDataPart("signature",psign)
+                                        .addFormDataPart("nickname",pnickname)
+                                        .addFormDataPart("sex",psex)
+                                        .addFormDataPart("company",pcompany)
+                                        .addFormDataPart("duty",pduty)
+                                        .addFormDataPart("email",pemail)
+                                        .addFormDataPart("stuid",pstudentid)
+                                        .addFormDataPart("enterschool",penterschool)
+                                        .addFormDataPart("headimg",f.getName(),fileBody)
+                                        .build();
+                            }else {
+                                //File file=new File();
+                                //fileBody=RequestBody.create(file,type);
+                                multipartBody = new MultipartBody.Builder()
+                                        .setType(MultipartBody.ALTERNATIVE)
+                                        .addFormDataPart("username",username)
+                                        .addFormDataPart("password","")
+                                        .addFormDataPart("question","")
+                                        .addFormDataPart("answer","")
+                                        .addFormDataPart("signature",psign)
+                                        .addFormDataPart("nickname",pnickname)
+                                        .addFormDataPart("sex",psex)
+                                        .addFormDataPart("company",pcompany)
+                                        .addFormDataPart("duty",pduty)
+                                        .addFormDataPart("email",pemail)
+                                        .addFormDataPart("stuid",pstudentid)
+                                        .addFormDataPart("enterschool",penterschool)
+                                        .addFormDataPart("headimg","")
+                                        .build();
+                            }
 
-                            RequestBody multipartBody = new MultipartBody.Builder()
-                                    .setType(MultipartBody.ALTERNATIVE)
-                                    .addFormDataPart("username",username)
-                                    .addFormDataPart("password","")
-                                    .addFormDataPart("question","")
-                                    .addFormDataPart("answer","")
-                                    .addFormDataPart("signature",psign)
-                                    .addFormDataPart("nickname",pnickname)
-                                    .addFormDataPart("sex",psex)
-                                    .addFormDataPart("company",pcompany)
-                                    .addFormDataPart("duty",pduty)
-                                    .addFormDataPart("email",pemail)
-                                    .addFormDataPart("headimg",f.getName(),fileBody)
-                                    .build();
                             String url = getResources().getString(R.string.ip)+getResources().getString(R.string.editinfo);
                             OkHttpClient okHttpClient = new OkHttpClient();
                             final Request request = new Request.Builder()

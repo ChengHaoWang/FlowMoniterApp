@@ -7,6 +7,7 @@ import androidx.appcompat.widget.AppCompatSpinner;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
@@ -108,6 +109,8 @@ public class Register extends AppCompatActivity {
         AppCompatSpinner question=findViewById(R.id.chose_question);
         final int[] question_id = {0};
         final EditText answer=findViewById(R.id.answer);
+        final EditText studentid=findViewById(R.id.studentid);
+        final EditText enterschool=findViewById(R.id.enterschool);
 
         //选择问题监听
         question.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -134,9 +137,11 @@ public class Register extends AppCompatActivity {
                 final String [] question_array=getResources().getStringArray(R.array.question);
                 final String question_text=question_array[question_id[0]];
                 final String answer_text=answer.getText().toString().trim();
+                final String studentid_text=studentid.getText().toString().trim();
+                final String enterschool_text=enterschool.getText().toString().trim();
 
                 if (!phnoe_number_text.equals("")&&!password_text.equals("")&&!confirm_password_text.equals("")&&!username_text.equals("")&&!job_text.equals("")
-                        &&!question_text.equals("")&&!answer_text.equals("")){
+                        &&!question_text.equals("")&&!answer_text.equals("")&&!studentid_text.equals("")&&!enterschool_text.equals("")){
                     if (phnoe_number_text.length()!=11){
 
                         AlertDialog dialog=new AlertDialog.Builder(Register.this).setMessage("请输入正确的手机号码").create();
@@ -167,6 +172,8 @@ public class Register extends AppCompatActivity {
                                         .add("headimg","")
                                         .add("macaddress",mac)
                                         .add("model",model)
+                                        .add("stuid",studentid_text)
+                                        .add("enterschool",enterschool_text)
                                         .build();
                                 String url = getResources().getString(R.string.ip)+getResources().getString(R.string.register);
                                 OkHttpClient okHttpClient = new OkHttpClient();
@@ -191,16 +198,39 @@ public class Register extends AppCompatActivity {
                                     }
                                     @Override
                                     public void onResponse(Call call, Response response) throws IOException {
-                                        String result = response.body().string();
+                                        String respose_text = response.body().string();
                                         Log.e("网络请求","请求成功");
-                                        new Handler(Looper.getMainLooper()).post(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                Toast.makeText(Register.this,"注册成功",Toast.LENGTH_SHORT).show();
-                                                //AlertDialog dialog=new AlertDialog.Builder(Register.this).setMessage("注册成功").create();
-                                                //dialog.show();
+                                        JSONObject jsonObject = null;
+                                        try {
+                                            jsonObject = new JSONObject(respose_text);
+                                            final String result = jsonObject.optString("result", null);
+                                            if(result!=null){
+                                                if (result.equals("success")){
+                                                    new Handler(Looper.getMainLooper()).post(new Runnable() {
+                                                        @Override
+                                                        public void run() {
+                                                            Toast.makeText(Register.this,"注册成功",Toast.LENGTH_SHORT).show();
+                                                        }
+                                                    });
+                                                }else {
+                                                    new Handler(Looper.getMainLooper()).post(new Runnable() {
+                                                        @Override
+                                                        public void run() {
+                                                            Toast.makeText(Register.this,"注册失败"+result,Toast.LENGTH_SHORT).show();
+                                                        }
+                                                    });
+                                                }
+                                            }else {
+                                                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        Toast.makeText(Register.this,"注册失败"+result,Toast.LENGTH_SHORT).show();
+                                                    }
+                                                });
                                             }
-                                        });
+                                        }catch (JSONException e) {
+                                            e.printStackTrace();
+                                        }
                                         //finish();
                                         Intent intent=new Intent(Register.this,MainActivity.class);
                                         startActivity(intent);

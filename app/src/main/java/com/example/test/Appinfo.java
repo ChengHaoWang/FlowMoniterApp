@@ -13,8 +13,10 @@ public class Appinfo implements Serializable {
     private String appIcon;
     private String dayTotalFlowString;
     private String weekTotalFlowString;
-    private String monthTotalString;
-    private String totalTime;
+    private String monthTotalFlowString;
+    private String dayTotalTime;
+    private String weekTotalTime;
+    private String monthTotalTime;
     private String description;
 
     public String getUsername() {
@@ -73,20 +75,36 @@ public class Appinfo implements Serializable {
         this.weekTotalFlowString = weekTotalFlowString;
     }
 
-    public String getMonthTotalString() {
-        return monthTotalString;
+    public String getMonthTotalFlowString() {
+        return monthTotalFlowString;
     }
 
-    public void setMonthTotalString(String monthTotalString) {
-        this.monthTotalString = monthTotalString;
+    public void setMonthTotalFlowString(String monthTotalFlowString) {
+        this.monthTotalFlowString = monthTotalFlowString;
     }
 
-    public String getTotalTime() {
-        return totalTime;
+    public String getDayTotalTime() {
+        return dayTotalTime;
     }
 
-    public void setTotalTime(String totalTime) {
-        this.totalTime = totalTime;
+    public void setDayTotalTime(String dayTotalTime) {
+        this.dayTotalTime = dayTotalTime;
+    }
+
+    public String getWeekTotalTime() {
+        return weekTotalTime;
+    }
+
+    public void setWeekTotalTime(String weekTotalTime) {
+        this.weekTotalTime = weekTotalTime;
+    }
+
+    public String getMonthTotalTime() {
+        return monthTotalTime;
+    }
+
+    public void setMonthTotalTime(String monthTotalTime) {
+        this.monthTotalTime = monthTotalTime;
     }
 
     public String getDescription() {

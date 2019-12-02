@@ -47,7 +47,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1"
+            android:layout_weight="1.2"
             android:orientation="horizontal"
             android:paddingLeft="30dp"
             android:background="@color/white">
@@ -149,6 +149,58 @@
                 android:layout_marginLeft="30dp"
                 android:theme="@style/itemSpinnerStyle">
             </androidx.appcompat.widget.AppCompatSpinner>
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="horizontal"
+            android:background="@color/white"
+            android:paddingLeft="30dp"
+            android:layout_marginTop="15dp">
+            <TextView
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:textAlignment="center"
+                android:textColor="@color/black"
+                android:textSize="18dp"
+                android:text="@string/studentid"
+                >
+            </TextView>
+            <EditText
+                android:layout_width="200dp"
+                android:layout_height="50dp"
+                android:background="@color/white"
+                android:layout_marginLeft="30dp"
+                android:hint="@string/input_hint"
+                android:id="@+id/studentid"
+                android:textSize="18dp">
+            </EditText>
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="horizontal"
+            android:background="@color/white"
+            android:paddingLeft="30dp">
+            <TextView
+                android:layout_width="80dp"
+                android:layout_height="50dp"
+                android:textColor="@color/black"
+                android:textAlignment="center"
+                android:textSize="18dp"
+                android:text="@string/enterschool">
+            </TextView>
+            <EditText
+                android:layout_width="200dp"
+                android:layout_height="50dp"
+                android:background="@color/white"
+
+                android:hint="@string/input_hint"
+                android:id="@+id/enterschool"
+                android:textSize="18dp">
+            </EditText>
         </LinearLayout>
         <LinearLayout
             android:layout_width="match_parent"

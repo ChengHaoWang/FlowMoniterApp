@@ -7,12 +7,12 @@ public class AppItem {
     private String appName=null;
     private String appPackageName=null;
     private int appId=0;
-    private String totalFlowString=null;
-    private String totalTime=null;
+    private String totalFlowString="0";
+    private String totalTime="0";
     private Drawable appIcon=null;
     private double appSpeed=0.0;
-    private String speedUnit=null;
-    private String appDescription=null;
+    private String speedUnit="B/s";
+    private String appDescription="0";
     private long totalFlowLong=0;
     private long firstInstallTime=0;
     private long startTime=0;
