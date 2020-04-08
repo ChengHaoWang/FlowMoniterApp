@@ -66,7 +66,7 @@
             android:gravity="center"
             android:background="@null"
             android:lines="1"
-            android:maxLength="12"
+            android:maxLength="11"
             android:textSize="20dp">
         </EditText>
         <LinearLayout

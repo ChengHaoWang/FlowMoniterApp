@@ -70,7 +70,7 @@ public class MainActivity extends AppCompatActivity {
     private SharedPreferences sp;
     public static final MediaType JSON
             = MediaType.get("application/json; charset=utf-8");
-    private long validtime=1;
+    private long validtime=30;
     //private final OkHttpClient client = new OkHttpClient();
 
     @RequiresApi(api = Build.VERSION_CODES.M)
